@@ -14,7 +14,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <KPICard
             title="Departments"
-            value="12"
+            value="2"
             icon={<Building2 className="h-8 w-8" />}
             trend="+2 this month"
             trendUp

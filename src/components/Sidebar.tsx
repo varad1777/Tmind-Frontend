@@ -21,8 +21,16 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col p-4">
       {/* Brand / Logo */}
-      <div className="text-2xl font-bold mb-6 text-sidebar-primary tracking-wide">
+      {/* <div className="text-2xl font-bold mb-6 text-sidebar-primary tracking-wide">
         Tmind
+      </div> */}
+      <div className="h-12 flex items-center justify-center border-b border-sidebar-border px-4 mb-6">
+      <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center font-bold text-primary-foreground">
+              T
+            </div>
+            <span className="font-bold text-lg text-sidebar-foreground">Tmind</span>
+      </div>
       </div>
 
       {/* Navigation Menu */}
