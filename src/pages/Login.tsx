@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ThemeToggle from "../components/ThemeToggle"; // your custom toggle
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -9,25 +8,44 @@ const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<{ username?: string; email?: string; password?: string }>({});
+
+  // ✅ Validation logic
+  const validate = () => {
+    const newErrors: { username?: string; email?: string; password?: string } = {};
+
+    if (mode === "signup" && !/^[A-Za-z0-9]{3,}$/.test(username)) {
+      newErrors.username = "Username must be at least 3 characters (letters or numbers only).";
+    }
+
+    if (!/^[A-Za-z0-9._%+-]+@tmind\.com$/.test(email)) {
+      newErrors.email = "Email must end with @tmind.com";
+    }
+
+    if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters long";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Just simulate navigation — no backend logic
+
+    if (!validate()) return;
+
     if (mode === "signup") {
       console.log("User signed up:", { username, email, password });
     } else {
       console.log("User logged in:", { email, password });
     }
-    navigate("/dashboard"); // move to dashboard or detail page
+
+    navigate("/dashboard");
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground transition-colors">
-      {/* Theme Toggle */}
-      <div className="absolute top-4 right-6">
-        <ThemeToggle />
-      </div>
-
       {/* Card */}
       <form
         onSubmit={handleSubmit}
@@ -50,9 +68,9 @@ const Login: React.FC = () => {
               placeholder="Enter username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              required
               className="w-full border border-border rounded-md p-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
             />
+            {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
           </div>
         )}
 
@@ -63,9 +81,9 @@ const Login: React.FC = () => {
             placeholder="Enter email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
             className="w-full border border-border rounded-md p-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
           />
+          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
         </div>
 
         <div>
@@ -75,9 +93,9 @@ const Login: React.FC = () => {
             placeholder="Enter password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
             className="w-full border border-border rounded-md p-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
           />
+          {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
         </div>
 
         <button

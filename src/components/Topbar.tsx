@@ -1,5 +1,3 @@
-"use client";
-
 import { Bell, User } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -12,8 +10,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 export default function Topbar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Example: clear user token or session
+    // localStorage.removeItem("authToken");
+    // sessionStorage.clear();
+
+    // Redirect to login or home page
+    navigate("/");
+  };
+
   return (
     <header className="sticky top-0 z-40 h-16 flex items-center justify-between px-6 bg-card backdrop-blur-md border-b border-border shadow-sm transition-colors">
       {/* Left side title */}
@@ -41,7 +51,6 @@ export default function Topbar() {
             </Button>
           </DropdownMenuTrigger>
 
-          {/* Dropdown Content */}
           <DropdownMenuContent
             align="end"
             className="w-80 bg-card border border-border shadow-lg rounded-lg p-2"
@@ -110,7 +119,10 @@ export default function Topbar() {
 
             <DropdownMenuSeparator className="bg-border" />
 
-            <DropdownMenuItem className="text-destructive font-medium hover:bg-destructive/10 rounded-md transition-colors">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-destructive font-medium hover:bg-destructive/10 rounded-md transition-colors"
+            >
               Logout
             </DropdownMenuItem>
           </DropdownMenuContent>

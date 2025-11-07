@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Assets from "./pages/Assets";
 import Devices from "./pages/Devices";
+import AddDeviceForm from "./devices/AddDevice";
 import Signals from "./pages/Signals";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -21,13 +22,14 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/assets" element={<Assets />} />
           <Route path="/devices" element={<Devices />} />
+          <Route path="/devices/add" element={<AddDeviceForm />} />
           <Route path="/signals" element={<Signals />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
 
         {/* Redirect unknown routes to login */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
       </Routes>
     </Router>
   );

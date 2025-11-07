@@ -2,9 +2,11 @@ import { useState } from "react";
 import { devices as deviceData } from "@/data/devices";
 import { Button } from "@/components/ui/button";
 import { Eye, Settings, Trash2, Wrench, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Devices() {
   const [searchTerm, setSearchTerm] = useState("");
+   const navigate = useNavigate();
 
   // Filter devices by name (case-insensitive)
   const filteredDevices = deviceData.filter((d) =>
@@ -21,7 +23,9 @@ export default function Devices() {
             Manage, monitor, and configure all connected devices
           </p>
         </div>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+        <Button
+        onClick={() => navigate("/devices/add")}
+         className="bg-primary text-primary-foreground hover:bg-primary/90">
           + Add Device
         </Button>
       </div>
