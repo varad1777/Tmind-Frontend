@@ -23,12 +23,20 @@ export default function Devices() {
             Manage, monitor, and configure all connected devices
           </p>
         </div>
+        <div className="flex flex-row gap-2">
         <Button
         onClick={() => navigate("/devices/add")}
          className="bg-primary text-primary-foreground hover:bg-primary/90">
           + Add Device
         </Button>
+        <Button
+        onClick={() => navigate("/devices/upload")}
+         className="bg-primary text-primary-foreground hover:bg-primary/90">
+          + Upload CSV
+        </Button>
+        </div>
       </div>
+
 
       {/* Search Bar */}
       <div className="flex items-center gap-3">
