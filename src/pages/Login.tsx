@@ -118,18 +118,50 @@ const Login: React.FC = () => {
         )}
 
         {step === "otp" && (
-          <div>
-            <label className="block text-sm mb-1 font-medium">OTP</label>
-            <input
-              type="text"
-              placeholder="Enter 6-digit OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className="w-full border border-border rounded-md p-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            {errors.otp && <p className="text-red-500 text-xs mt-1">{errors.otp}</p>}
+        <div>
+          <label className="block text-sm mb-2 font-medium">OTP</label>
+          <div className="flex justify-between gap-2">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <input
+                key={index}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={otp[index] || ""}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/, ""); // allow only digits
+                  if (!value) return;
+
+                  // Update OTP value
+                  const newOtp = otp.split("");
+                  newOtp[index] = value;
+                  const updatedOtp = newOtp.join("");
+                  setOtp(updatedOtp);
+
+                  // Move focus to next box
+                  const nextInput = document.getElementById(`otp-${index + 1}`);
+                  if (nextInput && value) (nextInput as HTMLInputElement).focus();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Backspace") {
+                    const newOtp = otp.split("");
+                    newOtp[index] = "";
+                    setOtp(newOtp.join(""));
+                    if (index > 0) {
+                      const prevInput = document.getElementById(`otp-${index - 1}`);
+                      (prevInput as HTMLInputElement)?.focus();
+                    }
+                  }
+                }}
+                id={`otp-${index}`}
+                className="w-12 h-12 text-center border border-border rounded-md text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            ))}
           </div>
-        )}
+
+          {errors.otp && <p className="text-red-500 text-xs mt-2">{errors.otp}</p>}
+        </div>
+      )}
 
         <button
           type="submit"

@@ -29,11 +29,11 @@ export default function Devices() {
          className="bg-primary text-primary-foreground hover:bg-primary/90">
           + Add Device
         </Button>
-        <Button
+        {/* <Button
         onClick={() => navigate("/devices/upload")}
          className="bg-primary text-primary-foreground hover:bg-primary/90">
           + Upload CSV
-        </Button>
+        </Button> */}
         </div>
       </div>
 
