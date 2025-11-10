@@ -2,22 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Settings2, ArrowLeft } from "lucide-react";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { getDeviceById, updateDevice } from "@/api/deviceApi";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ConfigureDevice() {
   const navigate = useNavigate();
@@ -40,7 +31,7 @@ export default function ConfigureDevice() {
     },
   });
 
-  // 🔹 Fetch device details by ID
+  // 🔹 Fetch device details
   useEffect(() => {
     if (!deviceId) return;
     const fetchDevice = async () => {
@@ -58,19 +49,17 @@ export default function ConfigureDevice() {
           }));
         }
       } catch (error) {
-        console.error("❌ Failed to fetch device:", error);
-        alert("Error fetching device details. Please try again.");
+        console.error("Failed to fetch device:", error);
+        toast.error("Error fetching device details. Please try again.");
       }
     };
     fetchDevice();
   }, [deviceId]);
 
-  // 🔹 Handle config name + poll interval
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 🔹 Handle protocol settings change
   const handleProtocolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -82,7 +71,6 @@ export default function ConfigureDevice() {
     });
   };
 
-  // 🔹 Handle Endian dropdown
   const handleEndianChange = (value: string) => {
     setFormData({
       ...formData,
@@ -90,13 +78,11 @@ export default function ConfigureDevice() {
     });
   };
 
-  // 🔹 Submit configuration update
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!deviceId) return alert("Missing Device ID!");
+    if (!deviceId) return toast.error("Missing Device ID!");
     setLoading(true);
 
-    // ✅ Use fetched device info, not manual ones
     const payload = {
       device: {
         name: deviceDetails.name,
@@ -110,15 +96,13 @@ export default function ConfigureDevice() {
       },
     };
 
-    console.log("📤 Sending payload to backend:", payload);
-
     try {
       await updateDevice(deviceId, payload);
-      alert("Configuration updated successfully!");
-      navigate("/devices");
+      toast.success("Configuration updated successfully!");
+      setTimeout(() => navigate("/devices"), 1000);
     } catch (error) {
-      console.error("❌ Error updating configuration:", error);
-      alert("Failed to update configuration. Check console for details.");
+      console.error("Error updating configuration:", error);
+      toast.error("Failed to update configuration. Check console for details.");
     } finally {
       setLoading(false);
     }
@@ -161,9 +145,7 @@ export default function ConfigureDevice() {
             </div>
 
             <hr className="border-border" />
-            <p className="text-sm font-semibold text-muted-foreground">
-              Protocol Settings
-            </p>
+            <p className="text-sm font-semibold text-muted-foreground">Protocol Settings</p>
 
             {/* Protocol Settings */}
             <div className="grid gap-3 md:grid-cols-2">
@@ -211,7 +193,7 @@ export default function ConfigureDevice() {
                   <SelectTrigger>
                     <SelectValue placeholder="Select Endian" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background text-foreground">
                     <SelectItem value="Little">Little</SelectItem>
                     <SelectItem value="Big">Big</SelectItem>
                   </SelectContent>
@@ -237,6 +219,9 @@ export default function ConfigureDevice() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Toast container */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );
 }

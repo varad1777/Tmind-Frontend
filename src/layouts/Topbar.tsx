@@ -48,7 +48,7 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
       <div className="flex items-center gap-3">
         <ThemeToggle />
 
-        {/* Notifications */}
+        {/* Notifications
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -80,7 +80,7 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
 
         {/* User Menu */}
         <DropdownMenu>

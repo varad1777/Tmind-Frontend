@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { createDevice } from "@/api/deviceApi"; // ⬅️ Import API
+import { createDevice } from "@/api/deviceApi"; // ⬅️ your API call
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function AddDeviceForm() {
   const navigate = useNavigate();
@@ -17,8 +19,6 @@ export default function AddDeviceForm() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -29,24 +29,35 @@ export default function AddDeviceForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-    setSuccess(null);
 
     try {
       const payload = {
         name: formData.name,
         description: formData.description,
-        signals: [], // optional empty array if API expects it
+        signals: [], // optional if API expects it
       };
 
       const response = await createDevice(payload);
       console.log("Device created:", response);
 
-      setSuccess(`Device "${formData.name}" created successfully!`);
+      toast.success(`Device "${formData.name}" created successfully!`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+
       setTimeout(() => navigate("/devices"), 1000);
     } catch (err: any) {
       console.error("Error creating device:", err);
-      setError("Failed to create device. Please try again.");
+      toast.error("Failed to create device. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
     } finally {
       setLoading(false);
     }
@@ -89,10 +100,6 @@ export default function AddDeviceForm() {
               />
             </div>
 
-            {/* Status messages */}
-            {error && <p className="text-destructive text-sm">{error}</p>}
-            {success && <p className="text-green-600 text-sm">{success}</p>}
-
             {/* Buttons */}
             <div className="flex justify-end gap-3 pt-4">
               <Button
@@ -110,6 +117,9 @@ export default function AddDeviceForm() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Toast Container */}
+      <ToastContainer />
     </div>
   );
 }

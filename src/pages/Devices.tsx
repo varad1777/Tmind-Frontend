@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Settings, Trash2, Wrench, Search, HdmiPort } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getDevices, deleteDevice } from "@/api/deviceApi";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Device {
   deviceId: string;
@@ -43,18 +45,49 @@ export default function Devices() {
     fetchDevices();
   }, []);
 
-  // Delete device
-  const handleDelete = async (deviceId: string) => {
-    const confirmed = window.confirm("Are you sure you want to delete this device?");
-    if (!confirmed) return;
+  // React-Toastify confirmation for deletion
+  const confirmDelete = (deviceId: string) => {
+    toast(
+      ({ closeToast }) => (
+        <div className="flex flex-col gap-2">
+          <p>Are you sure you want to delete this device?</p>
+          <div className="flex justify-end gap-2 mt-2">
+            <button
+              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+              onClick={closeToast}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+              onClick={async () => {
+                await handleDelete(deviceId);
+                closeToast();
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+        position: "top-center",
+      }
+    );
+  };
 
+  // Delete device API call
+  const handleDelete = async (deviceId: string) => {
     try {
       await deleteDevice(deviceId);
       setDevices((prev) => prev.filter((d) => d.deviceId !== deviceId));
-      alert("Device deleted successfully!");
+      toast.success("Device deleted successfully!");
     } catch (err) {
       console.error("Error deleting device:", err);
-      alert("Failed to delete device. Check console.");
+      toast.error("Failed to delete device. Check console.");
     }
   };
 
@@ -65,6 +98,9 @@ export default function Devices() {
 
   return (
     <div className="p-6 space-y-8">
+      {/* Toast container */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -110,14 +146,17 @@ export default function Devices() {
             </thead>
             <tbody>
               {filteredDevices.map((d) => (
-                <tr key={d.deviceId} className="border-t border-border hover:bg-muted/20 transition-colors">
+                <tr
+                  key={d.deviceId}
+                  className="border-t border-border hover:bg-muted/20 transition-colors"
+                >
                   <td className="p-4 font-medium">{d.name}</td>
                   <td className="p-4">{d.description}</td>
                   <td className="p-4 flex justify-center gap-2 flex-wrap">
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => navigate(`/devices/edit/${d.deviceId}`)} // ✅ View Details Modal
+                      onClick={() => navigate(`/devices/edit/${d.deviceId}`)}
                       className="flex items-center gap-1"
                     >
                       <Settings className="h-4 w-4" /> Edit
@@ -133,7 +172,7 @@ export default function Devices() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/devices/ports/${d.deviceId}`)}
+                      onClick={() => navigate(`/devices/ports`)}
                       className="flex items-center gap-1"
                     >
                       <HdmiPort className="h-4 w-4" /> Ports
@@ -142,7 +181,7 @@ export default function Devices() {
                       variant="destructive"
                       size="sm"
                       className="flex items-center gap-1"
-                      onClick={() => handleDelete(d.deviceId)} // ✅ Delete API
+                      onClick={() => confirmDelete(d.deviceId)}
                     >
                       <Trash2 className="h-4 w-4" /> Delete
                     </Button>

@@ -19,10 +19,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { Settings2, Cpu, Save, ArrowLeft } from "lucide-react";
 import { getDeviceById, updateDevice } from "@/api/deviceApi";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function EditDeviceForm() {
   const navigate = useNavigate();
-  const { deviceId } = useParams<{ deviceId: string }>(); // ✅ Use correct param name
+  const { deviceId } = useParams<{ deviceId: string }>();
 
   const [deviceDetails, setDeviceDetails] = useState({
     name: "",
@@ -43,38 +45,43 @@ export default function EditDeviceForm() {
 
   const [loading, setLoading] = useState(false);
 
-  // Fetch device by ID
   useEffect(() => {
-    if (!deviceId) return;
-    const fetchDevice = async () => {
-      try {
-        const res = await getDeviceById(deviceId);
-        if (res) {
-          setDeviceDetails({
-            name: res.name || "",
-            description: res.description || "",
-            protocol: res.protocol || "ModbusTCP",
-          });
-          setFormData({
-            configName: res.configuration?.name || `${res.name}_config`,
-            pollInterval: res.configuration?.pollIntervalMs || 1000,
-            protocolSettings: JSON.parse(res.configuration?.protocolSettingsJson || "{}"),
-          });
-        }
-      } catch (error) {
-        console.error("❌ Failed to fetch device:", error);
-        alert("Error fetching device details. Please try again.");
-      }
-    };
-    fetchDevice();
-  }, [deviceId]);
+  if (!deviceId) return;
 
-  // Handle config name / poll interval changes
+  const fetchDevice = async () => {
+    try {
+      const res = await getDeviceById(deviceId);
+      console.log("🔹 Fetched device:", res);
+
+      if (res) {
+        setDeviceDetails({
+          name: res.name || "",
+          description: res.description || "",
+          protocol: res.protocol || "ModbusTCP",
+        });
+
+        setFormData({
+          configName: res.deviceConfiguration?.name || `${res.name}_config`,
+          pollInterval: res.deviceConfiguration?.pollIntervalMs || 1000,
+          protocolSettings: res.deviceConfiguration?.protocolSettingsJson
+            ? JSON.parse(res.deviceConfiguration.protocolSettingsJson)
+            : { IpAddress: "127.0.0.1", Port: 5020, SlaveId: 1, Endian: "Little" },
+        });
+      }
+    } catch (error) {
+      console.error("❌ Failed to fetch device:", error);
+      toast.error("Error fetching device details. Please try again.");
+    }
+  };
+
+  fetchDevice();
+}, [deviceId]);
+
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle protocol settings changes
   const handleProtocolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -86,7 +93,6 @@ export default function EditDeviceForm() {
     });
   };
 
-  // Handle Endian dropdown
   const handleEndianChange = (value: string) => {
     setFormData({
       ...formData,
@@ -94,17 +100,14 @@ export default function EditDeviceForm() {
     });
   };
 
-  // Submit updated device
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!deviceId) return alert("Missing Device ID!"); // ✅ Now correctly checks deviceId
+    if (!deviceId) return toast.error("Missing Device ID!");
 
     setLoading(true);
 
     const payload = {
-      device: {
-        ...deviceDetails,
-      },
+      device: { ...deviceDetails },
       configuration: {
         name: formData.configName,
         pollIntervalMs: Number(formData.pollInterval),
@@ -112,15 +115,13 @@ export default function EditDeviceForm() {
       },
     };
 
-    console.log("📤 Sending payload:", payload);
-
     try {
-      await updateDevice(deviceId, payload); // ✅ Use deviceId
-      alert("Device updated successfully!");
-      navigate("/devices");
+      await updateDevice(deviceId, payload);
+      toast.success("Device updated successfully!");
+      setTimeout(() => navigate("/devices"), 1000);
     } catch (error) {
       console.error("❌ Error updating device:", error);
-      alert("Failed to update device. Check console for details.");
+      toast.error("Failed to update device. Check console for details.");
     } finally {
       setLoading(false);
     }
@@ -167,7 +168,9 @@ export default function EditDeviceForm() {
                     id="description"
                     name="description"
                     value={deviceDetails.description}
-                    onChange={(e) => setDeviceDetails({ ...deviceDetails, description: e.target.value })}
+                    onChange={(e) =>
+                      setDeviceDetails({ ...deviceDetails, description: e.target.value })
+                    }
                   />
                 </div>
 
@@ -180,9 +183,9 @@ export default function EditDeviceForm() {
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select protocol" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background text-foreground">
                       <SelectItem value="ModbusTCP">ModbusTCP</SelectItem>
-                      <SelectItem value="ModbusRTU">ModbusRTU</SelectItem>
+                      {/* <SelectItem value="ModbusRTU">ModbusRTU</SelectItem> */}
                     </SelectContent>
                   </Select>
                 </div>
@@ -263,7 +266,7 @@ export default function EditDeviceForm() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select Endian" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background text-foreground">
                         <SelectItem value="Little">Little</SelectItem>
                         <SelectItem value="Big">Big</SelectItem>
                       </SelectContent>
@@ -290,6 +293,9 @@ export default function EditDeviceForm() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Toast Container */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );
 }
