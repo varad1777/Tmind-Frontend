@@ -10,14 +10,25 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Settings2, ArrowLeft } from "lucide-react";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { getDeviceById, updateDevice } from "@/api/deviceApi";
 
 export default function ConfigureDevice() {
   const navigate = useNavigate();
   const { deviceId } = useParams<{ deviceId: string }>();
-  const deviceName = deviceId || "Device";
+  const [loading, setLoading] = useState(false);
+  const [deviceDetails, setDeviceDetails] = useState({
+    name: "",
+    description: "",
+    protocol: "",
+  });
 
-  // 🧩 Form State
   const [formData, setFormData] = useState({
     configName: "",
     pollInterval: 1000,
@@ -29,39 +40,49 @@ export default function ConfigureDevice() {
     },
   });
 
-  // Auto-fill config name based on device name
+  // 🔹 Fetch device details by ID
   useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      configName: `${deviceName}_config`,
-    }));
-  }, [deviceName]);
+    if (!deviceId) return;
+    const fetchDevice = async () => {
+      try {
+        const res = await getDeviceById(deviceId);
+        if (res) {
+          setDeviceDetails({
+            name: res.name || "Unknown",
+            description: res.description || "",
+            protocol: res.protocol || "ModbusTCP",
+          });
+          setFormData((prev) => ({
+            ...prev,
+            configName: `${res.name}_config`,
+          }));
+        }
+      } catch (error) {
+        console.error("❌ Failed to fetch device:", error);
+        alert("Error fetching device details. Please try again.");
+      }
+    };
+    fetchDevice();
+  }, [deviceId]);
 
-  // Handle text/number inputs
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  // 🔹 Handle config name + poll interval
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle protocol setting field change
-  const handleProtocolChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  // 🔹 Handle protocol settings change
+  const handleProtocolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       protocolSettings: {
         ...formData.protocolSettings,
-        [name]:
-          name === "Port" || name === "SlaveId"
-            ? Number(value)
-            : value,
+        [name]: name === "Port" || name === "SlaveId" ? Number(value) : value,
       },
     });
   };
 
-  // Handle Endian dropdown
+  // 🔹 Handle Endian dropdown
   const handleEndianChange = (value: string) => {
     setFormData({
       ...formData,
@@ -69,14 +90,18 @@ export default function ConfigureDevice() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // 🔹 Submit configuration update
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!deviceId) return alert("Missing Device ID!");
+    setLoading(true);
 
+    // ✅ Use fetched device info, not manual ones
     const payload = {
       device: {
-        name: deviceName,
-        description: "This is " + deviceName,
-        protocol: "ModbusTCP",
+        name: deviceDetails.name,
+        description: deviceDetails.description,
+        protocol: deviceDetails.protocol || "ModbusTCP",
       },
       configuration: {
         name: formData.configName,
@@ -85,10 +110,18 @@ export default function ConfigureDevice() {
       },
     };
 
-    console.log("📦 Sending Payload to Backend:", payload);
-    // axios.post("/api/devices/configure", payload);
+    console.log("📤 Sending payload to backend:", payload);
 
-    navigate("/devices");
+    try {
+      await updateDevice(deviceId, payload);
+      alert("Configuration updated successfully!");
+      navigate("/devices");
+    } catch (error) {
+      console.error("❌ Error updating configuration:", error);
+      alert("Failed to update configuration. Check console for details.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -96,14 +129,12 @@ export default function ConfigureDevice() {
       <Card className="w-full max-w-2xl shadow-lg border border-border bg-card">
         <CardHeader className="flex flex-row items-center gap-2">
           <Settings2 className="h-5 w-5 text-primary" />
-          <CardTitle className="text-xl font-semibold">
-            Configure Device
-          </CardTitle>
+          <CardTitle className="text-xl font-semibold">Configure Device</CardTitle>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Configuration Name */}
+            {/* Config Name */}
             <div className="grid gap-2">
               <Label htmlFor="configName">Configuration Name *</Label>
               <Input
@@ -129,19 +160,18 @@ export default function ConfigureDevice() {
               />
             </div>
 
-            {/* Protocol Settings Fields */}
             <hr className="border-border" />
             <p className="text-sm font-semibold text-muted-foreground">
               Protocol Settings
             </p>
 
+            {/* Protocol Settings */}
             <div className="grid gap-3 md:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="IpAddress">IP Address</Label>
                 <Input
                   id="IpAddress"
                   name="IpAddress"
-                  type="text"
                   value={formData.protocolSettings.IpAddress}
                   onChange={handleProtocolChange}
                   required
@@ -200,8 +230,8 @@ export default function ConfigureDevice() {
                 <ArrowLeft className="h-4 w-4" /> Back
               </Button>
 
-              <Button type="submit" className="flex items-center gap-2">
-                <Settings2 className="h-4 w-4" /> Save Configuration
+              <Button type="submit" disabled={loading}>
+                {loading ? "Saving..." : "Save Configuration"}
               </Button>
             </div>
           </form>

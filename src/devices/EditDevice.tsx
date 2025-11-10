@@ -18,104 +18,116 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Settings2, Cpu, Save, ArrowLeft } from "lucide-react";
+import { getDeviceById, updateDevice } from "@/api/deviceApi";
 
 export default function EditDeviceForm() {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { deviceId } = useParams<{ deviceId: string }>(); // ✅ Use correct param name
 
-  const [device, setDevice] = useState({
+  const [deviceDetails, setDeviceDetails] = useState({
     name: "",
     description: "",
-    protocol: "ModbusRTU",
+    protocol: "ModbusTCP",
   });
 
-  const [configuration, setConfiguration] = useState({
-    name: "",
-    pollIntervalMs: "",
-    IpAddress: "127.0.0.1",
-    Port: 5020,
-    SlaveId: 1,
-    Endian: "Little",
+  const [formData, setFormData] = useState({
+    configName: "",
+    pollInterval: 1000,
+    protocolSettings: {
+      IpAddress: "127.0.0.1",
+      Port: 5020,
+      SlaveId: 1,
+      Endian: "Little",
+    },
   });
 
   const [loading, setLoading] = useState(false);
 
+  // Fetch device by ID
   useEffect(() => {
-    // Mock data for demo purpose
-    const mockData = {
-      device: {
-        name: "dev",
-        description: "This is dev",
-        protocol: "ModbusTCP",
-      },
-      configuration: {
-        name: "line 1 modbus",
-        pollIntervalMs: 1500,
-        protocolSettingsJson:
-          '{"IpAddress":"127.0.0.1","Port":5020,"SlaveId":1,"Endian":"Little"}',
-      },
+    if (!deviceId) return;
+    const fetchDevice = async () => {
+      try {
+        const res = await getDeviceById(deviceId);
+        if (res) {
+          setDeviceDetails({
+            name: res.name || "",
+            description: res.description || "",
+            protocol: res.protocol || "ModbusTCP",
+          });
+          setFormData({
+            configName: res.configuration?.name || `${res.name}_config`,
+            pollInterval: res.configuration?.pollIntervalMs || 1000,
+            protocolSettings: JSON.parse(res.configuration?.protocolSettingsJson || "{}"),
+          });
+        }
+      } catch (error) {
+        console.error("❌ Failed to fetch device:", error);
+        alert("Error fetching device details. Please try again.");
+      }
     };
+    fetchDevice();
+  }, [deviceId]);
 
-    const parsed = JSON.parse(mockData.configuration.protocolSettingsJson);
+  // Handle config name / poll interval changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-    setDevice(mockData.device);
-    setConfiguration({
-      name: mockData.configuration.name,
-      pollIntervalMs: mockData.configuration.pollIntervalMs,
-      IpAddress: parsed.IpAddress,
-      Port: parsed.Port,
-      SlaveId: parsed.SlaveId,
-      Endian: parsed.Endian,
+  // Handle protocol settings changes
+  const handleProtocolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      protocolSettings: {
+        ...formData.protocolSettings,
+        [name]: name === "Port" || name === "SlaveId" ? Number(value) : value,
+      },
     });
-  }, [id]);
-
-  const handleDeviceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setDevice({ ...device, [e.target.name]: e.target.value });
   };
 
-  const handleConfigurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfiguration({ ...configuration, [e.target.name]: e.target.value });
+  // Handle Endian dropdown
+  const handleEndianChange = (value: string) => {
+    setFormData({
+      ...formData,
+      protocolSettings: { ...formData.protocolSettings, Endian: value },
+    });
   };
 
-  const handleSelectChange = (value: string) => {
-    setDevice({ ...device, protocol: value });
-  };
-
+  // Submit updated device
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!deviceId) return alert("Missing Device ID!"); // ✅ Now correctly checks deviceId
+
     setLoading(true);
 
-    // Convert protocol fields to JSON string
-    const protocolSettingsJson = JSON.stringify(
-      {
-        IpAddress: configuration.IpAddress,
-        Port: Number(configuration.Port),
-        SlaveId: Number(configuration.SlaveId),
-        Endian: configuration.Endian,
+    const payload = {
+      device: {
+        ...deviceDetails,
       },
-      null,
-      2
-    );
-
-    const finalPayload = {
-      device,
       configuration: {
-        name: configuration.name,
-        pollIntervalMs: Number(configuration.pollIntervalMs),
-        protocolSettingsJson,
+        name: formData.configName,
+        pollIntervalMs: Number(formData.pollInterval),
+        protocolSettingsJson: JSON.stringify(formData.protocolSettings),
       },
     };
 
-    console.log("Final JSON for backend:", finalPayload);
+    console.log("📤 Sending payload:", payload);
 
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await updateDevice(deviceId, payload); // ✅ Use deviceId
+      alert("Device updated successfully!");
       navigate("/devices");
-    }, 800);
+    } catch (error) {
+      console.error("❌ Error updating device:", error);
+      alert("Failed to update device. Check console for details.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-[85vh] bg-gradient-to-b from-background to-muted/30 text-foreground transition-colors duration-300 p-4">
+    <div className="flex justify-center items-center min-h-[85vh] bg-gradient-to-b from-background to-muted/30 text-foreground p-4">
       <Card className="w-full max-w-2xl shadow-lg border border-border/60 bg-card/90 backdrop-blur-sm">
         <CardHeader className="flex flex-col items-center space-y-2 pb-2">
           <Settings2 className="h-7 w-7 text-primary" />
@@ -123,13 +135,13 @@ export default function EditDeviceForm() {
             Edit Device & Configuration
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Update device details and related configuration parameters
+            Update device details and configuration parameters
           </p>
         </CardHeader>
 
         <CardContent className="pt-4">
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* DEVICE SECTION */}
+            {/* DEVICE DETAILS */}
             <div className="rounded-xl border border-border/70 bg-muted/30 p-5 shadow-inner">
               <div className="flex items-center gap-2 mb-4">
                 <Cpu className="h-5 w-5 text-primary" />
@@ -143,9 +155,8 @@ export default function EditDeviceForm() {
                     id="name"
                     name="name"
                     type="text"
-                    value={device.name}
-                    onChange={handleDeviceChange}
-                    placeholder="Enter device name"
+                    value={deviceDetails.name}
+                    onChange={(e) => setDeviceDetails({ ...deviceDetails, name: e.target.value })}
                     required
                   />
                 </div>
@@ -155,31 +166,30 @@ export default function EditDeviceForm() {
                   <Textarea
                     id="description"
                     name="description"
-                    value={device.description}
-                    onChange={handleDeviceChange}
-                    placeholder="Enter short description"
+                    value={deviceDetails.description}
+                    onChange={(e) => setDeviceDetails({ ...deviceDetails, description: e.target.value })}
                   />
                 </div>
 
                 <div className="grid gap-2">
-                <Label>Protocol</Label>
-                <Select
-                  value={device.protocol}
-                  onValueChange={handleSelectChange}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select protocol" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background text-foreground">
-                    <SelectItem value="ModbusRTU">ModbusRTU</SelectItem>
-                    {/* <SelectItem value="ModbusTCP">ModbusTCP</SelectItem> */}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <Label>Protocol</Label>
+                  <Select
+                    value={deviceDetails.protocol}
+                    onValueChange={(value) => setDeviceDetails({ ...deviceDetails, protocol: value })}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select protocol" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ModbusTCP">ModbusTCP</SelectItem>
+                      <SelectItem value="ModbusRTU">ModbusRTU</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            {/* CONFIGURATION SECTION */}
+            {/* CONFIGURATION */}
             <div className="rounded-xl border border-border/70 bg-muted/30 p-5 shadow-inner">
               <div className="flex items-center gap-2 mb-4">
                 <Settings2 className="h-5 w-5 text-primary" />
@@ -191,36 +201,34 @@ export default function EditDeviceForm() {
                   <Label htmlFor="configName">Configuration Name *</Label>
                   <Input
                     id="configName"
-                    name="name"
+                    name="configName"
                     type="text"
-                    value={configuration.name}
-                    onChange={handleConfigurationChange}
-                    placeholder="e.g. Line 1 Config"
+                    value={formData.configName}
+                    onChange={handleChange}
                     required
                   />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="pollIntervalMs">Poll Interval (ms)</Label>
+                  <Label htmlFor="pollInterval">Poll Interval (ms)</Label>
                   <Input
-                    id="pollIntervalMs"
-                    name="pollIntervalMs"
+                    id="pollInterval"
+                    name="pollInterval"
                     type="number"
-                    value={configuration.pollIntervalMs}
-                    onChange={handleConfigurationChange}
-                    placeholder="e.g. 1500"
+                    value={formData.pollInterval}
+                    onChange={handleChange}
+                    required
                   />
                 </div>
 
-                {/* Protocol Structured Fields */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label>IP Address</Label>
                     <Input
                       name="IpAddress"
-                      value={configuration.IpAddress}
-                      onChange={handleConfigurationChange}
-                      placeholder="127.0.0.1"
+                      value={formData.protocolSettings.IpAddress}
+                      onChange={handleProtocolChange}
+                      required
                     />
                   </div>
 
@@ -229,9 +237,9 @@ export default function EditDeviceForm() {
                     <Input
                       name="Port"
                       type="number"
-                      value={configuration.Port}
-                      onChange={handleConfigurationChange}
-                      placeholder="5020"
+                      value={formData.protocolSettings.Port}
+                      onChange={handleProtocolChange}
+                      required
                     />
                   </div>
 
@@ -240,20 +248,26 @@ export default function EditDeviceForm() {
                     <Input
                       name="SlaveId"
                       type="number"
-                      value={configuration.SlaveId}
-                      onChange={handleConfigurationChange}
-                      placeholder="1"
+                      value={formData.protocolSettings.SlaveId}
+                      onChange={handleProtocolChange}
+                      required
                     />
                   </div>
 
                   <div className="grid gap-2">
                     <Label>Endian</Label>
-                    <Input
-                      name="Endian"
-                      value={configuration.Endian}
-                      onChange={handleConfigurationChange}
-                      placeholder="Little / Big"
-                    />
+                    <Select
+                      value={formData.protocolSettings.Endian}
+                      onValueChange={handleEndianChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Endian" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Little">Little</SelectItem>
+                        <SelectItem value="Big">Big</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -265,19 +279,12 @@ export default function EditDeviceForm() {
                 type="button"
                 variant="outline"
                 onClick={() => navigate("/devices")}
-                className="flex items-center gap-2"
               >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Devices
+                <ArrowLeft className="h-4 w-4" /> Back to Devices
               </Button>
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {loading ? "Updating..." : "Save Changes"}
+              <Button type="submit" disabled={loading}>
+                <Save className="h-4 w-4" /> {loading ? "Updating..." : "Save Changes"}
               </Button>
             </div>
           </form>

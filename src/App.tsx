@@ -27,8 +27,8 @@ export default function App() {
           <Route path="/assets" element={<Assets />} />
           <Route path="/devices" element={<Devices />} />
           <Route path="/devices/add" element={<AddDeviceForm />} />
-          <Route path="/devices/edit" element={<EditDeviceForm />} />
-          <Route path="/devices/config" element={<ConfigureDeviceForm/>} />
+          <Route path="/devices/edit/:deviceId" element={<EditDeviceForm />} />
+          <Route path="/devices/config/:deviceId" element={<ConfigureDeviceForm/>} />
           <Route path="/devices/ports" element={<PortSettings/>} />
           <Route path="/devices/upload" element={<UploadCsv/>} />
           <Route path="/signals" element={<Signals />} />

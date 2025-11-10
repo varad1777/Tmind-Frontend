@@ -3,20 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { createDevice } from "@/api/deviceApi"; // ⬅️ Import API
 
 export default function AddDeviceForm() {
   const navigate = useNavigate();
@@ -24,10 +13,12 @@ export default function AddDeviceForm() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    protocol: "ModbusTCP", // ✅ Default protocol
+    protocol: "ModbusTCP",
   });
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -35,19 +26,30 @@ export default function AddDeviceForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSelectChange = (value: string) => {
-    setFormData({ ...formData, protocol: value });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
+    setSuccess(null);
 
-    // Example placeholder (no backend yet)
-    console.log("Device Submitted:", formData);
-    // alert(`Device "${formData.name}" created successfully!`);
-    setLoading(false);
-    navigate("/devices");
+    try {
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        signals: [], // optional empty array if API expects it
+      };
+
+      const response = await createDevice(payload);
+      console.log("Device created:", response);
+
+      setSuccess(`Device "${formData.name}" created successfully!`);
+      setTimeout(() => navigate("/devices"), 1000);
+    } catch (err: any) {
+      console.error("Error creating device:", err);
+      setError("Failed to create device. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,6 +89,9 @@ export default function AddDeviceForm() {
               />
             </div>
 
+            {/* Status messages */}
+            {error && <p className="text-destructive text-sm">{error}</p>}
+            {success && <p className="text-green-600 text-sm">{success}</p>}
 
             {/* Buttons */}
             <div className="flex justify-end gap-3 pt-4">
