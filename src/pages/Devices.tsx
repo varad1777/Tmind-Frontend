@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { devices as deviceData } from "@/data/devices";
 import { Button } from "@/components/ui/button";
-import { Eye, Settings, Trash2, Wrench, Search } from "lucide-react";
+import { Eye, Settings, Trash2, Wrench, Search,HdmiPort} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Devices() {
@@ -58,9 +58,7 @@ export default function Devices() {
           <thead className="bg-muted/40 text-left">
             <tr>
               <th className="p-4 font-semibold">Device Name</th>
-              <th className="p-4 font-semibold">Protocol</th>
-              <th className="p-4 font-semibold">Connection Type</th>
-              <th className="p-4 font-semibold">Status</th>
+              <th className="p-4 font-semibold">Description</th>
               <th className="p-4 font-semibold text-center">Actions</th>
             </tr>
           </thead>
@@ -71,29 +69,11 @@ export default function Devices() {
                 className="border-t border-border hover:bg-muted/20 transition-colors"
               >
                 <td className="p-4 font-medium">{d.name}</td>
-                <td className="p-4">{d.protocol}</td>
-                <td className="p-4">{d.connectionType}</td>
-                <td className="p-4">
-                  <span
-                    className={`px-2 py-1 rounded-md text-xs font-semibold ${
-                      d.status === "Active"
-                        ? "bg-green-100 text-green-700"
-                        : d.status === "Maintenance"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {d.status}
-                  </span>
-                </td>
+                <td className="p-4">{d.description}</td>
+
+
                 <td className="p-4 flex justify-center gap-2 flex-wrap">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-1"
-                  >
-                    <Eye className="h-4 w-4" /> View
-                  </Button>
+
                   <Button
                     variant="secondary"
                     size="sm"
@@ -109,6 +89,14 @@ export default function Devices() {
                     className="flex items-center gap-1"
                   >
                     <Wrench className="h-4 w-4" /> Config
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/devices/ports")}
+                    className="flex items-center gap-1"
+                  >
+                    <HdmiPort className="h-4 w-4" /> Ports
                   </Button>
                   <Button
                     variant="destructive"

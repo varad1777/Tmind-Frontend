@@ -8,6 +8,7 @@ import Devices from "./pages/Devices";
 import AddDeviceForm from "./devices/AddDevice";
 import EditDeviceForm from "./devices/EditDevice";
 import ConfigureDeviceForm from "./devices/ConfigureDevice";
+import PortSettings from "./devices/PortSettings";
 import UploadCsv from "./devices/UploadCsv";
 import Signals from "./pages/Signals";
 import Reports from "./pages/Reports";
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/devices/add" element={<AddDeviceForm />} />
           <Route path="/devices/edit" element={<EditDeviceForm />} />
           <Route path="/devices/config" element={<ConfigureDeviceForm/>} />
+          <Route path="/devices/ports" element={<PortSettings/>} />
           <Route path="/devices/upload" element={<UploadCsv/>} />
           <Route path="/signals" element={<Signals />} />
           <Route path="/reports" element={<Reports />} />
