@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import authApi from "@/api/authApi"; // ✅ your axios instance
+import authApi from "@/api/authApi";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -14,6 +14,44 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [errors, setErrors] = useState<{ username?: string; email?: string; password?: string; otp?: string }>({});
+  const [timer, setTimer] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [expired, setExpired] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [otpResentAt, setOtpResentAt] = useState<number>(0);
+
+
+  // Refs for OTP input navigation
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // 🕒 Start OTP countdown timer
+  useEffect(() => {
+  if (step !== "otp") return;
+
+  setExpired(false);
+  setTimer(60);
+
+  const interval = setInterval(() => {
+    setTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setExpired(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }, [step, otpResentAt]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
 
   // ✅ Validation logic
   const validate = () => {
@@ -27,8 +65,12 @@ const Login: React.FC = () => {
       newErrors.email = "Invalid email format.";
     }
 
-    if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters long.";
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      newErrors.password =
+        "Password must include uppercase, lowercase, number, and symbol (min 8 chars).";
     }
 
     if (step === "otp" && !/^\d{6}$/.test(otp)) {
@@ -44,23 +86,21 @@ const Login: React.FC = () => {
     e.preventDefault();
     if (!validate()) return;
 
+    setLoading(true);
     try {
       if (mode === "login") {
         if (step === "credentials") {
-          // Step 1: Login (send email + password)
           const payload = { email, password };
           const response = await authApi.post("/User/Login", payload);
-          toast.success(response.data.message || "Login successful! OTP sent to your email.");
+          toast.success(response.data.message || "OTP sent to your email.");
           setStep("otp");
         } else if (step === "otp") {
-          // Step 2: Verify OTP
           const otpPayload = { email, otp };
           const response = await authApi.post("/User/OtpVerify", otpPayload);
           toast.success(response.data.message || "OTP verified successfully!");
           navigate("/dashboard");
         }
       } else if (mode === "signup") {
-        // Signup flow
         const registerPayload = { username, email, password };
         const response = await authApi.post("/User/Register", registerPayload);
         toast.success(response.data.message || "Registered successfully! Please login.");
@@ -74,6 +114,31 @@ const Login: React.FC = () => {
         "Something went wrong. Please try again.";
       toast.error(errorMessage);
       console.error("API Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔁 Resend OTP logic
+  const handleResendOTP = async () => {
+    setResending(true);
+    try {
+      const payload = { email, password };
+      const response = await authApi.post("/User/Login", payload);
+      toast.success(response.data.message || "OTP resent successfully!");
+      setOtp("");
+      setExpired(false);
+      setOtpResentAt(Date.now());
+      setTimer(60);
+      otpRefs.current[0]?.focus();
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.data?.message ||
+        "Failed to resend OTP.";
+      toast.error(errorMessage);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -103,13 +168,13 @@ const Login: React.FC = () => {
               placeholder="Enter username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full border border-border rounded-md p-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full border border-border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary"
             />
             {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
           </div>
         )}
 
-        {/* Email + Password (for login or signup) */}
+        {/* Email + Password */}
         {(mode === "signup" || step === "credentials") && (
           <>
             <div>
@@ -119,7 +184,7 @@ const Login: React.FC = () => {
                 placeholder="Enter email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-border rounded-md p-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full border border-border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
             </div>
@@ -131,7 +196,7 @@ const Login: React.FC = () => {
                 placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-border rounded-md p-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full border border-border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
             </div>
@@ -141,54 +206,92 @@ const Login: React.FC = () => {
         {/* OTP Step */}
         {step === "otp" && (
           <div>
-            <label className="block text-sm mb-2 font-medium">OTP</label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium">OTP</label>
+              {!expired && timer > 0 && (
+                <div className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-md font-medium">
+                  Expires in: {formatTime(timer)}
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-between gap-2">
               {Array.from({ length: 6 }).map((_, index) => (
                 <input
                   key={index}
+                  ref={(el) => (otpRefs.current[index] = el)}
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
                   value={otp[index] || ""}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/, "");
-                    if (!value) return;
-
                     const newOtp = otp.split("");
                     newOtp[index] = value;
-                    const updatedOtp = newOtp.join("");
-                    setOtp(updatedOtp);
-
-                    const nextInput = document.getElementById(`otp-${index + 1}`);
-                    if (nextInput && value) (nextInput as HTMLInputElement).focus();
+                    setOtp(newOtp.join(""));
+                    if (value && index < 5) otpRefs.current[index + 1]?.focus();
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Backspace") {
-                      const newOtp = otp.split("");
-                      newOtp[index] = "";
-                      setOtp(newOtp.join(""));
-                      if (index > 0) {
-                        const prevInput = document.getElementById(`otp-${index - 1}`);
-                        (prevInput as HTMLInputElement)?.focus();
-                      }
+                    if (e.key === "Backspace" && !otp[index] && index > 0) {
+                      otpRefs.current[index - 1]?.focus();
                     }
                   }}
-                  id={`otp-${index}`}
                   className="w-12 h-12 text-center border border-border rounded-md text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               ))}
             </div>
+
+            {expired && (
+              <button
+                type="button"
+                disabled={resending}
+                onClick={handleResendOTP}
+                className={`w-full mt-4 py-2 text-sm font-medium border rounded-md transition ${
+                  resending
+                    ? "border-border text-muted-foreground cursor-not-allowed bg-muted"
+                    : "text-primary border-primary hover:bg-primary/10"
+                }`}
+              >
+                {resending ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    Resending...
+                  </div>
+                ) : (
+                  "Resend OTP"
+                )}
+              </button>
+            )}
+
             {errors.otp && <p className="text-red-500 text-xs mt-2">{errors.otp}</p>}
           </div>
         )}
 
         {/* Submit Button */}
-        <button
-          type="submit"
-          className="mt-2 w-full bg-primary text-primary-foreground py-2 rounded-md font-medium hover:bg-primary/90 transition"
-        >
-          {mode === "signup" ? "Create Account" : step === "credentials" ? "Login" : "Verify OTP"}
-        </button>
+        {!expired && (
+          <button
+            type="submit"
+            disabled={loading}
+            className={`mt-2 w-full py-2 rounded-md font-medium transition ${
+              loading
+                ? "bg-primary/70 text-primary-foreground cursor-not-allowed"
+                : "bg-primary text-primary-foreground hover:bg-primary/90"
+            }`}
+          >
+            {loading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Processing...
+              </div>
+            ) : mode === "signup" ? (
+              "Create Account"
+            ) : step === "credentials" ? (
+              "Login"
+            ) : (
+              "Verify OTP"
+            )}
+          </button>
+        )}
 
         {/* Switch Mode Links */}
         {mode === "login" && step === "credentials" && (
@@ -216,7 +319,6 @@ const Login: React.FC = () => {
         )}
       </form>
 
-      {/* Toasts */}
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );
