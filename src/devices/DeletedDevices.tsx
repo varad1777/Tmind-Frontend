@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Settings, Trash2, Wrench, Search, HdmiPort } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import {   getDeletedDeviced, retriveDeviceById } from "@/api/deviceApi";
-import { toast } from "react-hot-toast";
+import { RotateCcw, Search } from "lucide-react";
+import { getDeletedDeviced, retriveDeviceById } from "@/api/deviceApi";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Device {
   deviceId: string;
@@ -24,9 +24,7 @@ export default function DeletedDevices() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const navigate = useNavigate();
-
-  // Fetch all devices
+  // ✅ Fetch deleted devices
   useEffect(() => {
     const fetchDevices = async () => {
       try {
@@ -34,8 +32,9 @@ export default function DeletedDevices() {
         const data = await getDeletedDeviced();
         setDevices(data);
       } catch (err: any) {
-        console.error("Error fetching devices:", err);
-        setError("Failed to fetch devices.");
+        console.error("Error fetching deleted devices:", err);
+        setError("Failed to fetch deleted devices.");
+        toast.error("Failed to load deleted devices.");
       } finally {
         setLoading(false);
       }
@@ -44,22 +43,27 @@ export default function DeletedDevices() {
     fetchDevices();
   }, []);
 
-  // Delete device
+  // ✅ Retrieve a deleted device
   const retriveDevice = async (deviceId: string) => {
-    // const confirmed = window.confirm("Are you sure you want to Retrive this device?");
-    // if (!confirmed) return;
-
     try {
       await retriveDeviceById(deviceId);
       setDevices((prev) => prev.filter((d) => d.deviceId !== deviceId));
-      toast.success("Device Retrive successfully!");
+      toast.success("Device retrieved successfully!", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+      });
     } catch (err) {
-      console.error("Error retriving device:", err);
-      toast.error("Failed to retrive device.");
+      console.error("Error retrieving device:", err);
+      toast.error("Failed to retrieve device.", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+      });
     }
   };
 
-  // Filter devices by search term
+  // ✅ Filtered devices by search
   const filteredDevices = devices.filter((d) =>
     d.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -67,15 +71,12 @@ export default function DeletedDevices() {
   return (
     <div className="p-6 space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Deleted Devices</h1>
-          <p className="text-muted-foreground">Manage all Deleted devices</p>
-        </div>
-       
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Deleted Devices</h1>
+        <p className="text-muted-foreground">Manage all deleted devices</p>
       </div>
 
-      {/* Search */}
+      {/* Search Bar */}
       <div className="flex items-center gap-3">
         <div className="relative w-full sm:w-1/3">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -90,7 +91,11 @@ export default function DeletedDevices() {
       </div>
 
       {/* Loading / Error */}
-      {loading && <div className="text-center text-muted-foreground">Loading devices...</div>}
+      {loading && (
+        <div className="text-center text-muted-foreground">
+          Loading devices...
+        </div>
+      )}
       {error && <div className="text-center text-destructive">{error}</div>}
 
       {/* Device Table */}
@@ -105,27 +110,33 @@ export default function DeletedDevices() {
               </tr>
             </thead>
             <tbody>
-              {filteredDevices.map((d) => (
-                <tr key={d.deviceId} className="border-t border-border hover:bg-muted/20 transition-colors">
-                  <td className="p-4 font-medium">{d.name}</td>
-                  <td className="p-4">{d.description}</td>
-                  <td className="p-4 flex justify-center gap-2 flex-wrap">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => retriveDevice(d.deviceId)} // ✅ View Details Modal
-                      className="flex items-center gap-1"
-                    >
-                      <Settings className="h-4 w-4" /> Retrive
-                    </Button>
-                   
-                  </td>
-                </tr>
-              ))}
-              {filteredDevices.length === 0 && (
+              {filteredDevices.length > 0 ? (
+                filteredDevices.map((d) => (
+                  <tr
+                    key={d.deviceId}
+                    className="border-t border-border hover:bg-muted/20 transition-colors"
+                  >
+                    <td className="p-4 font-medium">{d.name}</td>
+                    <td className="p-4">{d.description}</td>
+                    <td className="p-4 flex justify-center">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => retriveDevice(d.deviceId)}
+                        className="flex items-center gap-1"
+                      >
+                        <RotateCcw className="h-4 w-4" /> Retrieve
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <td colSpan={3} className="text-center p-6 text-muted-foreground">
-                    No devices found.
+                  <td
+                    colSpan={3}
+                    className="text-center p-6 text-muted-foreground"
+                  >
+                    No deleted devices found.
                   </td>
                 </tr>
               )}
@@ -133,6 +144,9 @@ export default function DeletedDevices() {
           </table>
         </div>
       )}
+
+      {/* Toast Notification Container */}
+      <ToastContainer />
     </div>
   );
 }

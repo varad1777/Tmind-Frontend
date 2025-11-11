@@ -13,7 +13,7 @@ import UploadCsv from "./devices/UploadCsv";
 import Signals from "./pages/Signals";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
-import DeletedDevices from "./pages/DeletedDevices";
+import DeletedDevices from "./devices/DeletedDevices";
 
 export default function App() {
   return (
