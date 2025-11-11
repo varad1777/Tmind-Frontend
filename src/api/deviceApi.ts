@@ -19,9 +19,16 @@ interface Device {
 /**
  * 🔹 Get all devices
  */
-export const getDevices = async () => {
-  const response = await api.get("/api/devices");
-  return response.data.data;
+// export const getDevices = async () => {
+//   const response = await api.get("/api/devices");
+//   return response.data.data;
+// };
+
+export const getDevices = async (pageNumber = 1, pageSize = 10, searchTerm = "") => {
+  const response = await api.get("/api/devices", {
+    params: { pageNumber, pageSize, searchTerm },
+  });
+  return response.data.data; // this contains items, pageNumber, pageSize, totalCount, totalPages
 };
 
 /**

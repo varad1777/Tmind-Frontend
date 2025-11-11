@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Settings, Trash2, Wrench, Search, HdmiPort, AlertTriangle } from "lucide-react";
+import {
+  Settings,
+  Trash2,
+  Wrench,
+  Search,
+  HdmiPort,
+  AlertTriangle,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getDevices, deleteDevice } from "@/api/deviceApi";
 import {
@@ -29,20 +36,31 @@ interface Device {
 export default function Devices() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize] = useState(3);
+  const [totalPages, setTotalPages] = useState(1);
 
   const navigate = useNavigate();
 
-  // Fetch all devices
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  // Fetch devices with pagination & search
   useEffect(() => {
     const fetchDevices = async () => {
       try {
         setLoading(true);
-        const data = await getDevices();
-        setDevices(data);
+        const data = await getDevices(pageNumber, pageSize, debouncedSearch);
+        setDevices(data.items);
+        setTotalPages(data.totalPages);
       } catch (err: any) {
         console.error("Error fetching devices:", err);
         setError("Failed to fetch devices.");
@@ -52,14 +70,16 @@ export default function Devices() {
     };
 
     fetchDevices();
-  }, []);
+  }, [pageNumber, pageSize, debouncedSearch]);
 
   // Delete device API call
   const handleDelete = async () => {
     if (!selectedDevice) return;
     try {
       await deleteDevice(selectedDevice.deviceId);
-      setDevices((prev) => prev.filter((d) => d.deviceId !== selectedDevice.deviceId));
+      setDevices((prev) =>
+        prev.filter((d) => d.deviceId !== selectedDevice.deviceId)
+      );
       toast.success(`Device "${selectedDevice.name}" deleted successfully!`);
     } catch (err) {
       console.error("Error deleting device:", err);
@@ -69,11 +89,6 @@ export default function Devices() {
       setSelectedDevice(null);
     }
   };
-
-  // Filter devices by search term
-  const filteredDevices = devices.filter((d) =>
-    d.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="p-6 space-y-8">
@@ -106,7 +121,11 @@ export default function Devices() {
       </div>
 
       {/* Loading / Error */}
-      {loading && <div className="text-center text-muted-foreground">Loading devices...</div>}
+      {loading && (
+        <div className="text-center text-muted-foreground">
+          Loading devices...
+        </div>
+      )}
       {error && <div className="text-center text-destructive">{error}</div>}
 
       {/* Device Table */}
@@ -121,7 +140,7 @@ export default function Devices() {
               </tr>
             </thead>
             <tbody>
-              {filteredDevices.map((d) => (
+              {devices.map((d) => (
                 <tr
                   key={d.deviceId}
                   className="border-t border-border hover:bg-muted/20 transition-colors"
@@ -132,7 +151,9 @@ export default function Devices() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/devices/edit/${d.deviceId}`)}
+                      onClick={() =>
+                        navigate(`/devices/edit/${d.deviceId}`)
+                      }
                       className="flex items-center gap-1"
                     >
                       <Settings className="h-4 w-4" /> Edit
@@ -140,7 +161,9 @@ export default function Devices() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/devices/config/${d.deviceId}`)}
+                      onClick={() =>
+                        navigate(`/devices/config/${d.deviceId}`)
+                      }
                       className="flex items-center gap-1"
                     >
                       <Wrench className="h-4 w-4" /> Config
@@ -167,15 +190,43 @@ export default function Devices() {
                   </td>
                 </tr>
               ))}
-              {filteredDevices.length === 0 && (
+              {devices.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="text-center p-6 text-muted-foreground">
+                  <td
+                    colSpan={3}
+                    className="text-center p-6 text-muted-foreground"
+                  >
                     No devices found.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && !error && totalPages > 1 && (
+        <div className="flex justify-between items-center mt-4">
+          <Button
+            onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
+            disabled={pageNumber === 1}
+          >
+            Previous
+          </Button>
+
+          <span>
+            Page {pageNumber} of {totalPages}
+          </span>
+
+          <Button
+            onClick={() =>
+              setPageNumber((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={pageNumber === totalPages}
+          >
+            Next
+          </Button>
         </div>
       )}
 
@@ -213,7 +264,7 @@ export default function Devices() {
                 onClick={() => setOpenDialog(false)}
                 className="w-[45%] hover:bg-muted"
               >
-                No,Keep it
+                No, Keep it
               </Button>
               <Button
                 variant="destructive"
@@ -227,7 +278,6 @@ export default function Devices() {
           </div>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }
