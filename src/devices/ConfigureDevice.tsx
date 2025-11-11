@@ -14,6 +14,7 @@ export default function ConfigureDevice() {
   const navigate = useNavigate();
   const { deviceId } = useParams<{ deviceId: string }>();
   const [loading, setLoading] = useState(false);
+
   const [deviceDetails, setDeviceDetails] = useState({
     name: "",
     description: "",
@@ -78,11 +79,59 @@ export default function ConfigureDevice() {
     });
   };
 
+  // ✅ Required Field Validation
+  const validateForm = () => {
+    const { configName, pollInterval, protocolSettings } = formData;
+    const { IpAddress, Port, SlaveId } = protocolSettings;
+
+    // 🔸 Configuration Name validation (must not start with hyphen)
+    const configNameRegex = /^[A-Za-z][A-Za-z0-9_\- ]{0,99}$/;
+    if (!configName.trim()) {
+      toast.error("Configuration name is required.");
+      return false;
+    }
+    if (!configNameRegex.test(configName.trim())) {
+      toast.error(
+        "Configuration Name must start with a letter, be 1–100 characters long, and may contain letters, numbers, spaces, underscores, or hyphens (but not start with a hyphen)."
+      );
+      return false;
+    }
+
+    // 🔸 Poll Interval validation (100–300000)
+    if (isNaN(Number(pollInterval)) || pollInterval < 100 || pollInterval > 300000) {
+      toast.error("Poll interval must be between 100 and 300000 milliseconds.");
+      return false;
+    }
+
+    // 🔸 IP Address validation
+    const ipRegex =
+      /^(25[0-5]|2[0-4]\d|1?\d{1,2})(\.(25[0-5]|2[0-4]\d|1?\d{1,2})){3}$/;
+    if (!ipRegex.test(IpAddress)) {
+      toast.error("Invalid IP Address format (e.g., 192.168.1.1)");
+      return false;
+    }
+
+    // 🔸 Port validation
+    if (isNaN(Port) || Port < 1 || Port > 65535) {
+      toast.error("Port must be between 1 and 65535");
+      return false;
+    }
+
+    // 🔸 Slave ID validation
+    if (isNaN(SlaveId) || SlaveId < 1 || SlaveId > 247) {
+      toast.error("Slave ID must be between 1 and 247");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!deviceId) return toast.error("Missing Device ID!");
-    setLoading(true);
+    if (!validateForm()) return;
 
+    setLoading(true);
     const payload = {
       device: {
         name: deviceDetails.name,
@@ -220,7 +269,6 @@ export default function ConfigureDevice() {
         </CardContent>
       </Card>
 
-      {/* Toast container */}
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );

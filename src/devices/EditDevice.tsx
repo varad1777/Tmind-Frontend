@@ -46,37 +46,106 @@ export default function EditDeviceForm() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-  if (!deviceId) return;
+    if (!deviceId) return;
 
-  const fetchDevice = async () => {
-    try {
-      const res = await getDeviceById(deviceId);
-      console.log("🔹 Fetched device:", res);
+    const fetchDevice = async () => {
+      try {
+        const res = await getDeviceById(deviceId);
+        console.log("🔹 Fetched device:", res);
 
-      if (res) {
-        setDeviceDetails({
-          name: res.name || "",
-          description: res.description || "",
-          protocol: res.protocol || "ModbusTCP",
-        });
+        if (res) {
+          setDeviceDetails({
+            name: res.name || "",
+            description: res.description || "",
+            protocol: res.protocol || "ModbusTCP",
+          });
 
-        setFormData({
-          configName: res.deviceConfiguration?.name || `${res.name}_config`,
-          pollInterval: res.deviceConfiguration?.pollIntervalMs || 1000,
-          protocolSettings: res.deviceConfiguration?.protocolSettingsJson
-            ? JSON.parse(res.deviceConfiguration.protocolSettingsJson)
-            : { IpAddress: "127.0.0.1", Port: 5020, SlaveId: 1, Endian: "Little" },
-        });
+          setFormData({
+            configName: res.deviceConfiguration?.name || `${res.name}_config`,
+            pollInterval: res.deviceConfiguration?.pollIntervalMs || 1000,
+            protocolSettings: res.deviceConfiguration?.protocolSettingsJson
+              ? JSON.parse(res.deviceConfiguration.protocolSettingsJson)
+              : {
+                  IpAddress: "127.0.0.1",
+                  Port: 5020,
+                  SlaveId: 1,
+                  Endian: "Little",
+                },
+          });
+        }
+      } catch (error) {
+        console.error("❌ Failed to fetch device:", error);
+        toast.error("Error fetching device details. Please try again.");
       }
-    } catch (error) {
-      console.error("❌ Failed to fetch device:", error);
-      toast.error("Error fetching device details. Please try again.");
-    }
+    };
+
+    fetchDevice();
+  }, [deviceId]);
+
+  // 🔹 VALIDATION FUNCTION (backend-aligned)
+  const validateForm = () => {
+  const { name, description } = deviceDetails;
+  const { configName, pollInterval, protocolSettings } = formData;
+  const { IpAddress, Port, SlaveId } = protocolSettings;
+
+  // 🔸 Device Name validation (✅ can include hyphen but not start with one)
+  const nameRegex = /^[A-Za-z][A-Za-z0-9_\- ]{2,99}$/;
+  if (!nameRegex.test(name.trim())) {
+    toast.error(
+      "Device Name must start with a letter, be 3–100 characters long, and may contain letters, numbers, spaces, underscores, or hyphens (but not start with a hyphen)."
+    );
+    return false;
+  }
+
+  // 🔸 Description validation
+  if (description && description.length > 255) {
+    toast.error("Description must be less than 255 characters.");
+    return false;
+  }
+
+  // 🔸 Configuration Name validation (✅ can include hyphen but not start with one)
+  const configNameRegex = /^[A-Za-z][A-Za-z0-9_\- ]{0,99}$/;
+
+  if (!configName.trim()) {
+    toast.error("Configuration name is required.");
+    return false;
+  }
+
+  if (!configNameRegex.test(configName.trim())) {
+    toast.error(
+      "Configuration Name must start with a letter, be 1–100 characters long, and may contain letters, numbers, spaces, underscores, or hyphens (but not start with a hyphen)."
+    );
+    return false;
+  }
+
+  // 🔸 Poll Interval validation (100–300000)
+  if (isNaN(Number(pollInterval)) || pollInterval < 100 || pollInterval > 300000) {
+    toast.error("Poll interval must be between 100 and 300000 milliseconds.");
+    return false;
+  }
+
+  // 🔸 IP Address validation
+  const ipRegex =
+    /^(25[0-5]|2[0-4]\d|1?\d{1,2})(\.(25[0-5]|2[0-4]\d|1?\d{1,2})){3}$/;
+  if (!ipRegex.test(IpAddress)) {
+    toast.error("Invalid IP Address format (e.g., 192.168.1.1)");
+    return false;
+  }
+
+  // 🔸 Port validation
+  if (isNaN(Port) || Port < 1 || Port > 65535) {
+    toast.error("Port must be between 1 and 65535");
+    return false;
+  }
+
+  // 🔸 Slave ID validation
+  if (isNaN(SlaveId) || SlaveId < 1 || SlaveId > 247) {
+    toast.error("Slave ID must be between 1 and 247");
+    return false;
+  }
+
+  return true;
   };
-
-  fetchDevice();
-}, [deviceId]);
-
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -104,12 +173,15 @@ export default function EditDeviceForm() {
     e.preventDefault();
     if (!deviceId) return toast.error("Missing Device ID!");
 
+    // Run validation before submitting
+    if (!validateForm()) return;
+
     setLoading(true);
 
     const payload = {
       device: { ...deviceDetails },
       configuration: {
-        name: formData.configName,
+        name: formData.configName.trim(),
         pollIntervalMs: Number(formData.pollInterval),
         protocolSettingsJson: JSON.stringify(formData.protocolSettings),
       },
@@ -157,7 +229,9 @@ export default function EditDeviceForm() {
                     name="name"
                     type="text"
                     value={deviceDetails.name}
-                    onChange={(e) => setDeviceDetails({ ...deviceDetails, name: e.target.value })}
+                    onChange={(e) =>
+                      setDeviceDetails({ ...deviceDetails, name: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -178,14 +252,15 @@ export default function EditDeviceForm() {
                   <Label>Protocol</Label>
                   <Select
                     value={deviceDetails.protocol}
-                    onValueChange={(value) => setDeviceDetails({ ...deviceDetails, protocol: value })}
+                    onValueChange={(value) =>
+                      setDeviceDetails({ ...deviceDetails, protocol: value })
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select protocol" />
                     </SelectTrigger>
                     <SelectContent className="bg-background text-foreground">
                       <SelectItem value="ModbusTCP">ModbusTCP</SelectItem>
-                      {/* <SelectItem value="ModbusRTU">ModbusRTU</SelectItem> */}
                     </SelectContent>
                   </Select>
                 </div>

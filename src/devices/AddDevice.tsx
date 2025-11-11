@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { createDevice } from "@/api/deviceApi"; // ⬅️ your API call
+import { createDevice } from "@/api/deviceApi";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -20,44 +20,71 @@ export default function AddDeviceForm() {
 
   const [loading, setLoading] = useState(false);
 
+  // ✅ Full Form Validation (with Toast messages)
+  const validateForm = () => {
+    const { name, description } = formData;
+    const trimmedName = name.trim();
+
+    // 🔸 Device Name validation (can include hyphen but not start with one)
+    const nameRegex = /^[A-Za-z][A-Za-z0-9_\- ]{2,99}$/;
+    if (!trimmedName) {
+      toast.error("Device Name is required.");
+      return false;
+    }
+    if (!nameRegex.test(trimmedName)) {
+      toast.error(
+        "Device Name must start with a letter, be 3–100 characters long, and may contain letters, numbers, spaces, underscores, or hyphens (but not start with a hyphen)."
+      );
+      return false;
+    }
+
+    // 🔸 Description validation
+    if (description && description.length > 255) {
+      toast.error("Description must be less than 255 characters.");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
+
     setLoading(true);
 
     try {
       const payload = {
-        name: formData.name,
-        description: formData.description,
-        signals: [], // optional if API expects it
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
+        protocol: formData.protocol,
+        signals: [],
       };
 
       const response = await createDevice(payload);
       console.log("Device created:", response);
 
-      toast.success(`Device "${formData.name}" created successfully!`, {
+      toast.success(`Device "${payload.name}" created successfully!`, {
         position: "top-right",
         autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
       });
 
       setTimeout(() => navigate("/devices"), 1000);
     } catch (err: any) {
       console.error("Error creating device:", err);
-      toast.error("Failed to create device. Please try again.", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-      });
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data?.data?.message ||
+        "Failed to create device. Please try again.";
+      toast.error(message, { position: "top-right", autoClose: 3000 });
     } finally {
       setLoading(false);
     }
@@ -73,7 +100,7 @@ export default function AddDeviceForm() {
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             {/* Device Name */}
             <div className="grid gap-2">
               <Label htmlFor="name">Device Name *</Label>
@@ -86,6 +113,10 @@ export default function AddDeviceForm() {
                 onChange={handleChange}
                 required
               />
+              {/* <p className="text-muted-foreground text-xs mt-1">
+                Allowed: letters, numbers, spaces, underscores (_), hyphens (-).
+                Must start with a letter. Min 3 characters.
+              </p> */}
             </div>
 
             {/* Description */}
@@ -98,6 +129,9 @@ export default function AddDeviceForm() {
                 value={formData.description}
                 onChange={handleChange}
               />
+              {/* <p className="text-muted-foreground text-xs mt-1">
+                Max 255 characters.
+              </p> */}
             </div>
 
             {/* Buttons */}
@@ -118,8 +152,7 @@ export default function AddDeviceForm() {
         </CardContent>
       </Card>
 
-      {/* Toast Container */}
-      <ToastContainer />
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );
 }
