@@ -13,6 +13,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "@/api/userApi";
+import api from "../api/authApi";
+import toast  from "react-hot-toast";
+import { Outlet,useLocation } from "react-router-dom";
+
 
 interface TopbarProps {
   onToggleSidebar?: () => void;
@@ -21,6 +25,10 @@ interface TopbarProps {
 export default function Topbar({ onToggleSidebar }: TopbarProps) {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const location=useLocation();
+  const IsLoggesIn=location.state?.IsLoggedIn || false;
+
+  console.log(IsLoggesIn);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -34,9 +42,23 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
     fetchUser();
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try{
+      const response =await api.post("/User/logout");
+      console.log("response receive",response.data);
+      if(response.status==200){
+        navigate("/");
+        toast.success("logged Out Sucessfully");
+      }
+    }catch(err:any){
+      console.log("error accured",err);
+    }
     navigate("/");
   };
+
+  const HandleLogin=()=>{
+    navigate("/")
+  }
 
   return (
     <header className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 sm:px-6 bg-card backdrop-blur-md border-b border-border shadow-sm transition-colors">
@@ -62,7 +84,8 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
         <ThemeToggle />
 
         {/* User Dropdown */}
-        <DropdownMenu>
+        {IsLoggesIn ? (
+       <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
@@ -95,6 +118,42 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      ) : (
+        <button onClick={HandleLogin}>Login</button>
+      )}
+        {/* <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="flex items-center gap-2 rounded-full px-2 py-1.5 hover:bg-accent/30 transition-colors"
+            >
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                <User className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="text-sm font-medium text-foreground hidden sm:inline">
+                {user ? user.username : "Loading..."}
+              </span>
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-48 bg-card border border-border">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate("/profile")}>
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/settings")}>
+              Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-destructive font-medium"
+            >
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu> */}
       </div>
     </header>
   );

@@ -98,7 +98,7 @@ const Login: React.FC = () => {
           const otpPayload = { email, otp };
           const response = await authApi.post("/User/OtpVerify", otpPayload);
           toast.success(response.data.message || "OTP verified successfully!");
-          navigate("/dashboard");
+          navigate("/dashboard",{state:{IsLoggedIn:true}});
         }
       } else if (mode === "signup") {
         const registerPayload = { username, email, password };
