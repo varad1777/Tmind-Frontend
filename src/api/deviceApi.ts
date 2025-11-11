@@ -21,7 +21,7 @@ interface Device {
  */
 export const getDevices = async () => {
   const response = await api.get("/api/devices");
-  return response.data;
+  return response.data.data;
 };
 
 /**
@@ -29,7 +29,7 @@ export const getDevices = async () => {
  */
 export const createDevice = async (device: Device) => {
   const response = await api.post("/api/devices", device);
-  return response.data;
+  return response.data.data;
 };
 
 /**
@@ -37,7 +37,7 @@ export const createDevice = async (device: Device) => {
  */
 export const getDeviceById = async (id: string) => {
   const response = await api.get(`/api/devices/${id}`);
-  return response.data;
+  return response.data.data;
 };
 
 /**
@@ -45,7 +45,7 @@ export const getDeviceById = async (id: string) => {
  */
 export const updateDevice = async (id: string, device: Device) => {
   const response = await api.put(`/api/devices/${id}`, device);
-  return response.data;
+  return response.data.data;
 };
 
 /**
@@ -53,5 +53,19 @@ export const updateDevice = async (id: string, device: Device) => {
  */
 export const deleteDevice = async (id: string) => {
   const response = await api.delete(`/api/devices/${id}`);
-  return response.data;
+  return response.data.data;
+
+
+};
+export const retriveDeviceById = async (id: string) => {
+  const response = await api.post(`/api/devices/${id}/restore`);
+  return response.data.data;
+
+
+};
+
+
+export const getDeletedDeviced = async () => {
+  const response = await api.get(`api/devices/deleted`);
+  return response.data.data;
 };

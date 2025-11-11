@@ -13,6 +13,7 @@ import UploadCsv from "./devices/UploadCsv";
 import Signals from "./pages/Signals";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import DeletedDevices from "./pages/DeletedDevices";
 
 export default function App() {
   return (
@@ -29,11 +30,12 @@ export default function App() {
           <Route path="/devices/add" element={<AddDeviceForm />} />
           <Route path="/devices/edit/:deviceId" element={<EditDeviceForm />} />
           <Route path="/devices/config/:deviceId" element={<ConfigureDeviceForm/>} />
-          <Route path="/devices/ports" element={<PortSettings/>} />
+          <Route path="/devices/ports/:id" element={<PortSettings/>} />
           <Route path="/devices/upload" element={<UploadCsv/>} />
           <Route path="/signals" element={<Signals />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/deleted-devices" element={<DeletedDevices />} />
         </Route>
 
         {/* Redirect unknown routes to login */}

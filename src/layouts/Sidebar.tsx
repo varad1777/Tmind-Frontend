@@ -15,6 +15,7 @@ const menuItems = [
   { icon: <Activity size={18} />, label: "Signals", path: "/signals" },
   { icon: <FileText size={18} />, label: "Reports", path: "/reports" },
   { icon: <Settings size={18} />, label: "Settings", path: "/settings" },
+  { icon: <Settings size={18} />, label: "Deleted Devices", path: "/deleted-devices" },
 ];
 
 export default function Sidebar() {
