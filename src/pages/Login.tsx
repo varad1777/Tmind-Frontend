@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import authApi from "@/api/authApi";
+import { getCurrentUser } from "@/api/userApi"; // ✅ Current user API
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -20,68 +21,57 @@ const Login: React.FC = () => {
   const [resending, setResending] = useState(false);
   const [otpResentAt, setOtpResentAt] = useState<number>(0);
 
-
-  // Refs for OTP input navigation
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // 🕒 Start OTP countdown timer
+  // OTP Countdown Timer
   useEffect(() => {
-  if (step !== "otp") return;
+    if (step !== "otp") return;
+    setExpired(false);
+    setTimer(60);
 
-  setExpired(false);
-  setTimer(60);
+    const interval = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-  const interval = setInterval(() => {
-    setTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            setExpired(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }, [step, otpResentAt]);
+    return () => clearInterval(interval);
+  }, [step, otpResentAt]);
 
   const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60)
-      .toString()
-      .padStart(2, "0");
+    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
 
-  // ✅ Validation logic
+  // Validation
   const validate = () => {
     const newErrors: typeof errors = {};
-
     if (mode === "signup" && !/^[A-Za-z0-9]{3,}$/.test(username)) {
       newErrors.username = "Username must be at least 3 characters (letters or numbers only).";
     }
-
     if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) {
       newErrors.email = "Invalid email format.";
     }
-
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
     if (!passwordRegex.test(password)) {
       newErrors.password =
         "Password must include uppercase, lowercase, number, and symbol (min 8 chars).";
     }
-
     if (step === "otp" && !/^\d{6}$/.test(otp)) {
       newErrors.otp = "OTP must be 6 digits.";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // ✅ Handle Login / Signup / OTP verify
+  // Handle Login / Signup / OTP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
@@ -97,8 +87,17 @@ const Login: React.FC = () => {
         } else if (step === "otp") {
           const otpPayload = { email, otp };
           const response = await authApi.post("/User/OtpVerify", otpPayload);
+
+          // ✅ Save tokens if returned
+          if (response.data.access_token) localStorage.setItem("access_token", response.data.access_token);
+          if (response.data.refresh_token) localStorage.setItem("refresh_token", response.data.refresh_token);
+
+          // ✅ Fetch current user and save
+          const currentUser = await getCurrentUser();
+          localStorage.setItem("user", JSON.stringify(currentUser));
+
           toast.success(response.data.message || "OTP verified successfully!");
-          navigate("/dashboard",{state:{IsLoggedIn:true}});
+          navigate("/dashboard", { state: { IsLoggedIn: true } });
         }
       } else if (mode === "signup") {
         const registerPayload = { username, email, password };
@@ -119,7 +118,7 @@ const Login: React.FC = () => {
     }
   };
 
-  // 🔁 Resend OTP logic
+  // Resend OTP
   const handleResendOTP = async () => {
     setResending(true);
     try {
@@ -159,7 +158,6 @@ const Login: React.FC = () => {
             : "Enter the 6-digit OTP sent to your email"}
         </p>
 
-        {/* Signup Fields */}
         {mode === "signup" && (
           <div>
             <label className="block text-sm mb-1 font-medium">Username</label>
@@ -174,7 +172,6 @@ const Login: React.FC = () => {
           </div>
         )}
 
-        {/* Email + Password */}
         {(mode === "signup" || step === "credentials") && (
           <>
             <div>
@@ -188,7 +185,6 @@ const Login: React.FC = () => {
               />
               {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
             </div>
-
             <div>
               <label className="block text-sm mb-1 font-medium">Password</label>
               <input
@@ -203,7 +199,6 @@ const Login: React.FC = () => {
           </>
         )}
 
-        {/* OTP Step */}
         {step === "otp" && (
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -214,7 +209,6 @@ const Login: React.FC = () => {
                 </div>
               )}
             </div>
-
             <div className="flex justify-between gap-2">
               {Array.from({ length: 6 }).map((_, index) => (
                 <input
@@ -267,7 +261,6 @@ const Login: React.FC = () => {
           </div>
         )}
 
-        {/* Submit Button */}
         {!expired && (
           <button
             type="submit"
@@ -293,7 +286,6 @@ const Login: React.FC = () => {
           </button>
         )}
 
-        {/* Switch Mode Links */}
         {mode === "login" && step === "credentials" && (
           <p className="text-center text-sm mt-3 text-muted-foreground">
             Don’t have an account?{" "}
