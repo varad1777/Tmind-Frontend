@@ -153,178 +153,193 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground transition-colors">
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-4 w-[90%] max-w-md bg-card border border-border rounded-2xl shadow-md p-8"
-      >
-        <h1 className="text-2xl font-semibold text-center mb-2">
-          {mode === "signup" ? "Create Account" : step === "credentials" ? "Welcome Back" : "Enter OTP"}
-        </h1>
-        <p className="text-sm text-muted-foreground text-center mb-4">
-          {mode === "signup"
-            ? "Sign up to start managing your devices"
-            : step === "credentials"
-            ? "Login to access your TMind dashboard"
-            : "Enter the 6-digit OTP sent to your email"}
-        </p>
+  <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground transition-colors duration-300">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-4 w-[90%] max-w-md bg-card border border-border rounded-2xl shadow-lg p-8 transition-all duration-300"
+    >
+      <h1 className="text-2xl font-semibold text-center mb-2">
+        {mode === "signup" ? "Create Account" : step === "credentials" ? "Welcome Back" : "Enter OTP"}
+      </h1>
+      <p className="text-sm text-muted-foreground text-center mb-4">
+        {mode === "signup"
+          ? "Sign up to start managing your devices"
+          : step === "credentials"
+          ? "Login to access your TMind dashboard"
+          : "Enter the 6-digit OTP sent to your email"}
+      </p>
 
-        {mode === "signup" && (
+      {/* Username (Signup only) */}
+      {mode === "signup" && (
+        <div>
+          <label className="block text-sm mb-1 font-medium">Username</label>
+          <input
+            type="text"
+            placeholder="Enter username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full bg-background text-foreground border border-border rounded-md p-2.5 
+              focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary/60 
+              placeholder:text-muted-foreground shadow-sm transition-all"
+          />
+          {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
+        </div>
+      )}
+
+      {/* Email + Password */}
+      {(mode === "signup" || step === "credentials") && (
+        <>
           <div>
-            <label className="block text-sm mb-1 font-medium">Username</label>
+            <label className="block text-sm mb-1 font-medium">Email</label>
             <input
-              type="text"
-              placeholder="Enter username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full border border-border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              type="email"
+              placeholder="Enter email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-background text-foreground border border-border rounded-md p-2.5 
+                focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary/60 
+                placeholder:text-muted-foreground shadow-sm transition-all"
             />
-            {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
           </div>
-        )}
 
-        {(mode === "signup" || step === "credentials") && (
-          <>
-            <div>
-              <label className="block text-sm mb-1 font-medium">Email</label>
-              <input
-                type="email"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-            </div>
-            <div>
-              <label className="block text-sm mb-1 font-medium">Password</label>
-              <input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-            </div>
-          </>
-        )}
-
-        {step === "otp" && (
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium">OTP</label>
-              {!expired && timer > 0 && (
-                <div className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-md font-medium">
-                  Expires in: {formatTime(timer)}
-                </div>
-              )}
-            </div>
-            <div className="flex justify-between gap-2">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <input
-                  key={index}
-                  ref={(el) => { otpRefs.current[index] = el; }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={otp[index] || ""}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/, "");
-                    const newOtp = otp.split("");
-                    newOtp[index] = value;
-                    setOtp(newOtp.join(""));
-                    if (value && index < 5) otpRefs.current[index + 1]?.focus();
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Backspace" && !otp[index] && index > 0) {
-                      otpRefs.current[index - 1]?.focus();
-                    }
-                  }}
-                  className="w-12 h-12 text-center border border-border rounded-md text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              ))}
-            </div>
-
-            {expired && (
-              <button
-                type="button"
-                disabled={resending}
-                onClick={handleResendOTP}
-                className={`w-full mt-4 py-2 text-sm font-medium border rounded-md transition ${
-                  resending
-                    ? "border-border text-muted-foreground cursor-not-allowed bg-muted"
-                    : "text-primary border-primary hover:bg-primary/10"
-                }`}
-              >
-                {resending ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    Resending...
-                  </div>
-                ) : (
-                  "Resend OTP"
-                )}
-              </button>
-            )}
-
-            {errors.otp && <p className="text-red-500 text-xs mt-2">{errors.otp}</p>}
+            <label className="block text-sm mb-1 font-medium">Password</label>
+            <input
+              type="password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-background text-foreground border border-border rounded-md p-2.5 
+                focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary/60 
+                placeholder:text-muted-foreground shadow-sm transition-all"
+            />
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
           </div>
-        )}
+        </>
+      )}
 
-        {!expired && (
-          <button
-            type="submit"
-            disabled={loading}
-            className={`mt-2 w-full py-2 rounded-md font-medium transition ${
-              loading
-                ? "bg-primary/70 text-primary-foreground cursor-not-allowed"
-                : "bg-primary text-primary-foreground hover:bg-primary/90"
-            }`}
-          >
-            {loading ? (
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Processing...
+      {/* OTP Section */}
+      {step === "otp" && (
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-sm font-medium">OTP</label>
+            {!expired && timer > 0 && (
+              <div className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-md font-medium">
+                Expires in: {formatTime(timer)}
               </div>
-            ) : mode === "signup" ? (
-              "Create Account"
-            ) : step === "credentials" ? (
-              "Login"
-            ) : (
-              "Verify OTP"
             )}
-          </button>
-        )}
+          </div>
 
-        {mode === "login" && step === "credentials" && (
-          <p className="text-center text-sm mt-3 text-muted-foreground">
-            Don’t have an account?{" "}
-            <span onClick={() => setMode("signup")} className="text-primary underline cursor-pointer">
-              Sign up
-            </span>
-          </p>
-        )}
+          <div className="flex justify-between gap-2">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <input
+                key={index}
+                ref={(el) => (otpRefs.current[index] = el)}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={otp[index] || ""}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/, "");
+                  const newOtp = otp.split("");
+                  newOtp[index] = value;
+                  setOtp(newOtp.join(""));
+                  if (value && index < 5) otpRefs.current[index + 1]?.focus();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Backspace" && !otp[index] && index > 0) {
+                    otpRefs.current[index - 1]?.focus();
+                  }
+                }}
+                className="w-12 h-12 text-center bg-background text-foreground border border-border rounded-md 
+                  text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary 
+                  focus:border-primary/60 transition-all shadow-sm"
+              />
+            ))}
+          </div>
 
-        {mode === "signup" && (
-          <p className="text-center text-sm mt-3 text-muted-foreground">
-            Already have an account?{" "}
-            <span
-              onClick={() => {
-                setMode("login");
-                setStep("credentials");
-              }}
-              className="text-primary underline cursor-pointer"
+          {expired && (
+            <button
+              type="button"
+              disabled={resending}
+              onClick={handleResendOTP}
+              className={`w-full mt-4 py-2 text-sm font-medium border rounded-md transition-all ${
+                resending
+                  ? "border-border text-muted-foreground cursor-not-allowed bg-muted"
+                  : "text-primary border-primary hover:bg-primary/10"
+              }`}
             >
-              Login here
-            </span>
-          </p>
-        )}
-      </form>
+              {resending ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  Resending...
+                </div>
+              ) : (
+                "Resend OTP"
+              )}
+            </button>
+          )}
+          {errors.otp && <p className="text-red-500 text-xs mt-2">{errors.otp}</p>}
+        </div>
+      )}
 
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
-    </div>
-  );
+      {/* Submit Button */}
+      {!expired && (
+        <button
+          type="submit"
+          disabled={loading}
+          className={`mt-2 w-full py-2 rounded-md font-medium transition-all ${
+            loading
+              ? "bg-primary/70 text-primary-foreground cursor-not-allowed"
+              : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg"
+          }`}
+        >
+          {loading ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Processing...
+            </div>
+          ) : mode === "signup" ? (
+            "Create Account"
+          ) : step === "credentials" ? (
+            "Login"
+          ) : (
+            "Verify OTP"
+          )}
+        </button>
+      )}
+
+      {/* Mode Switch Links */}
+      {mode === "login" && step === "credentials" && (
+        <p className="text-center text-sm mt-3 text-muted-foreground">
+          Don’t have an account?{" "}
+          <span onClick={() => setMode("signup")} className="text-primary underline cursor-pointer">
+            Sign up
+          </span>
+        </p>
+      )}
+
+      {mode === "signup" && (
+        <p className="text-center text-sm mt-3 text-muted-foreground">
+          Already have an account?{" "}
+          <span
+            onClick={() => {
+              setMode("login");
+              setStep("credentials");
+            }}
+            className="text-primary underline cursor-pointer"
+          >
+            Login here
+          </span>
+        </p>
+      )}
+    </form>
+
+    <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+  </div>
+);
+
 };
 
 export default Login;
