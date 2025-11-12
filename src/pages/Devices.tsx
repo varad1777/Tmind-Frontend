@@ -239,6 +239,7 @@ export default function Devices() {
                       >
                         <Settings className="h-4 w-4" /> Edit
                       </Button>
+                      {!d.deviceConfiguration && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -246,7 +247,7 @@ export default function Devices() {
                         className="flex items-center gap-1"
                       >
                         <Wrench className="h-4 w-4" /> Config
-                      </Button>
+                      </Button>)}
                       <Button
                         variant="outline"
                         size="sm"
