@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Settings,
@@ -42,6 +42,10 @@ interface Device {
   };
 }
 
+type SelectedDevice = { deviceId: string; name: string };
+
+const SESSION_KEY = "selectedDeviceIds"; // now stores JSON: SelectedDevice[]
+
 export default function Devices() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,6 +59,44 @@ export default function Devices() {
   const [totalPages, setTotalPages] = useState(1);
 
   const navigate = useNavigate();
+
+  // --- sessionSelectedDevices state is initialized from sessionStorage safely
+  function readSelectedDevices(): SelectedDevice[] {
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      // sanitize objects, keep only deviceId & name
+      return parsed
+        .map((x) => {
+          if (x && typeof x === "object") {
+            const id = String((x as any).deviceId ?? (x as any).id ?? "");
+            const name = String((x as any).name ?? (x as any).displayName ?? "");
+            if (id) return { deviceId: id, name };
+          }
+          return null;
+        })
+        .filter((x): x is SelectedDevice => x !== null);
+    } catch {
+      return [];
+    }
+  }
+
+  const [sessionSelectedDevices, setSessionSelectedDevices] = useState<SelectedDevice[]>(
+    () => readSelectedDevices()
+  );
+
+  // Keep state in sync with other tabs (storage event)
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === SESSION_KEY) {
+        setSessionSelectedDevices(readSelectedDevices());
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   // Debounce search input
   useEffect(() => {
@@ -104,6 +146,33 @@ export default function Devices() {
     pageNumbers.push(i);
   }
 
+  // Toggle handler (updates sessionStorage + component state)
+  // Accepts deviceId and name, stores object { deviceId, name }.
+  const toggleSelectedDevice = useCallback((name: string, deviceId: string) => {
+    let current = readSelectedDevices();
+    const exists = current.some((sd) => sd.deviceId === deviceId);
+
+    if (exists) {
+      current = current.filter((sd) => sd.deviceId !== deviceId);
+    } else {
+      current = [...current, { deviceId, name }];
+    }
+
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(current));
+    } catch (e) {
+      console.warn("Failed to write sessionStorage", e);
+    }
+
+    setSessionSelectedDevices(current);
+    return !exists;
+  }, []);
+
+  // helper: check if device id is selected
+  function isDeviceSelected(deviceId: string) {
+    return sessionSelectedDevices.some((sd) => sd.deviceId === deviceId);
+  }
+
   return (
     <div className="p-6 space-y-8">
       {/* Header */}
@@ -136,9 +205,7 @@ export default function Devices() {
 
       {/* Loading / Error */}
       {loading && (
-        <div className="text-center text-muted-foreground">
-          Loading devices...
-        </div>
+        <div className="text-center text-muted-foreground">Loading devices...</div>
       )}
       {error && <div className="text-center text-destructive">{error}</div>}
 
@@ -154,52 +221,73 @@ export default function Devices() {
               </tr>
             </thead>
             <tbody>
-              {devices.map((d) => (
-                <tr
-                  key={d.deviceId}
-                  className="border-t border-border hover:bg-muted/20 transition-colors"
-                >
-                  <td className="p-4 font-medium">{d.name}</td>
-                  <td className="p-4">{d.description}</td>
-                  <td className="p-4 flex justify-center gap-2 flex-wrap">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/devices/edit/${d.deviceId}`)}
-                      className="flex items-center gap-1"
-                    >
-                      <Settings className="h-4 w-4" /> Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/devices/config/${d.deviceId}`)}
-                      className="flex items-center gap-1"
-                    >
-                      <Wrench className="h-4 w-4" /> Config
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/devices/ports`)}
-                      className="flex items-center gap-1"
-                    >
-                      <HdmiPort className="h-4 w-4" /> Ports
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1"
-                      onClick={() => {
-                        setSelectedDevice(d);
-                        setOpenDialog(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" /> Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {devices.map((d) => {
+                const isSelected = isDeviceSelected(d.deviceId);
+                return (
+                  <tr
+                    key={d.deviceId}
+                    className="border-t border-border hover:bg-muted/20 transition-colors"
+                  >
+                    <td className="p-4 font-medium">{d.name}</td>
+                    <td className="p-4">{d.description}</td>
+                    <td className="p-4 flex justify-center gap-2 flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/devices/edit/${d.deviceId}`)}
+                        className="flex items-center gap-1"
+                      >
+                        <Settings className="h-4 w-4" /> Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/devices/config/${d.deviceId}`)}
+                        className="flex items-center gap-1"
+                      >
+                        <Wrench className="h-4 w-4" /> Config
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/devices/ports`)}
+                        className="flex items-center gap-1"
+                      >
+                        <HdmiPort className="h-4 w-4" /> Ports
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                        onClick={() => {
+                          setSelectedDevice(d);
+                          setOpenDialog(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" /> Delete
+                      </Button>
+
+                      {/* Toggle Subscribe/Unsubscribe */}
+                      <Button
+                        variant={isSelected ? "destructive" : "outline"}
+                        size="sm"
+                        className="flex items-center gap-1"
+                        onClick={() => toggleSelectedDevice(d.name, d.deviceId)}
+                      >
+                        {isSelected ? (
+                          <>
+                            <Trash2 className="h-4 w-4" /> Unsubscribe
+                          </>
+                        ) : (
+                          <>
+                            <HdmiPort className="h-4 w-4" /> Subscribe
+                          </>
+                        )}
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
               {devices.length === 0 && (
                 <tr>
                   <td colSpan={3} className="text-center p-6 text-muted-foreground">
