@@ -28,7 +28,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (err) {
         console.log("Refresh token failed, redirecting to Register");
-        // window.location.href = "/Register";
+        window.location.href = "/";
         return Promise.reject(err);
       }
     }
