@@ -171,7 +171,7 @@ export default function ConfigureDevice() {
       setTimeout(() => navigate("/devices"), 1000);
     } catch (error) {
       console.error("Error updating configuration:", error);
-      // toast.error("Failed to update configuration.");
+      toast.error("Failed to update configuration.");
     } finally {
       setLoading(false);
     }

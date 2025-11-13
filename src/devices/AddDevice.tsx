@@ -66,7 +66,7 @@ export default function AddDeviceForm() {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         protocol: formData.protocol,
-        signals: [],
+    
       };
 
       const response = await createDevice(payload);
@@ -80,16 +80,24 @@ export default function AddDeviceForm() {
       setTimeout(() => navigate("/devices"), 1000);
     } catch (err: any) {
       console.error("Error creating device:", err);
-      const message =
-        err?.response?.data?.message ||
+
+      // Extract proper backend message
+      const backendMessage =
+        err?.response?.data?.error || 
+        err?.response?.data?.message || 
         err?.response?.data?.data?.message ||
         "Failed to create device. Please try again.";
-      // toast.error(message, { position: "top-right", autoClose: 3000 });
-    } finally {
+
+      toast.error(backendMessage, {
+        position: "top-right",
+        autoClose: 4000,
+        theme: "colored",
+      });
+    } 
+    finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="flex justify-center items-center min-h-[80vh] bg-background text-foreground transition-colors duration-300">
       <Card className="w-full max-w-xl shadow-lg border border-border bg-card">

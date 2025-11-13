@@ -205,10 +205,23 @@ useEffect(() => {
       await updateDevice(deviceId, payload);
       toast.success("Device updated successfully!");
       setTimeout(() => navigate("/devices"), 1000);
-    } catch (error) {
-      console.error("❌ Error updating device:", error);
-      // toast.error("Failed to update device.");
-    } finally {
+    } catch (err: any) {
+      console.error("Error editing device:", err);
+
+      // Extract proper backend message
+      const backendMessage =
+        err?.response?.data?.error || 
+        err?.response?.data?.message || 
+        err?.response?.data?.data?.message ||
+        "Failed to Edit device. Please try again.";
+
+      toast.error(backendMessage, {
+        position: "top-right",
+        autoClose: 4000,
+        theme: "colored",
+      });
+    } 
+    finally {
       setLoading(false);
     }
   };
