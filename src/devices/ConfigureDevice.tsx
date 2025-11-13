@@ -14,7 +14,6 @@ export default function ConfigureDevice() {
   const navigate = useNavigate();
   const { deviceId } = useParams<{ deviceId: string }>();
   const [loading, setLoading] = useState(false);
-  const [notFound, setNotFound] = useState(false);
 
   const [deviceDetails, setDeviceDetails] = useState({
     name: "",
@@ -71,8 +70,8 @@ export default function ConfigureDevice() {
         if (!toastShown) {
           toastShown = true;
           if (error.response?.status === 404) {
-            setNotFound(true);
             toast.error("Device not found!");
+            navigate("/devices");
           } else {
             toast.error("Error fetching device details. Please try again.");
           }
@@ -177,22 +176,7 @@ export default function ConfigureDevice() {
     }
   };
 
-  // 🟥 Show "Device Not Found" message if invalid ID
-  if (notFound) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] text-center p-6">
-        <AlertTriangle className="text-red-500 w-12 h-12 mb-3" />
-        <h2 className="text-xl font-semibold mb-2">Device Not Found</h2>
-        <p className="text-muted-foreground mb-4">
-          The device you are trying to configure doesn’t exist or may have been deleted.
-        </p>
-        <Button variant="outline" onClick={() => navigate("/devices")}>
-          <ArrowLeft className="w-4 h-4 mr-2" /> Go Back
-        </Button>
-        <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
-      </div>
-    );
-  }
+
 
   return (
     <div className="flex justify-center items-center min-h-[80vh] bg-background text-foreground p-4">

@@ -266,7 +266,7 @@ export default function Devices() {
                       >
                         <HdmiPort className="h-4 w-4" /> Ports
                       </Button>
-
+                      {d.deviceConfiguration && (
                       <Button
                         variant={isSelected ? "destructive" : "outline"}
                         size="sm"
@@ -282,7 +282,8 @@ export default function Devices() {
                             <HdmiPort className="h-4 w-4" /> Subscribe
                           </>
                         )}
-                      </Button>
+                      </Button>)
+              }
                     </td>
                   </tr>
                 );

@@ -44,7 +44,6 @@ export default function EditDeviceForm() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [notFound, setNotFound] = useState(false);
 
 useEffect(() => {
     if (!deviceId) return;
@@ -83,8 +82,8 @@ useEffect(() => {
         if (!toastShown) {
           toastShown = true;
           if (error.response?.status === 404) {
-            setNotFound(true);
             toast.error("Device not found!");
+            navigate("/devices");
           } else {
             toast.error("Error fetching device details. Please try again.");
           }
@@ -226,23 +225,7 @@ useEffect(() => {
     }
   };
 
-    // 🟥 Show "Device Not Found" message if invalid ID
-  if (notFound) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] text-center p-6">
-        <AlertTriangle className="text-red-500 w-12 h-12 mb-3" />
-        <h2 className="text-xl font-semibold mb-2">Device Not Found</h2>
-        <p className="text-muted-foreground mb-4">
-          The device you are trying to edit doesn’t exist or may have been deleted.
-        </p>
-        <Button variant="outline" onClick={() => navigate("/devices")}>
-          <ArrowLeft className="w-4 h-4 mr-2" /> Go Back
-        </Button>
-        <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
-      </div>
-    );
-  }
-
+  
   return (
     <div className="flex justify-center items-center min-h-[85vh] bg-gradient-to-b from-background to-muted/30 text-foreground p-4">
       <Card className="w-full max-w-2xl shadow-lg border border-border/60 bg-card/90 backdrop-blur-sm">

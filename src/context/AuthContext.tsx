@@ -41,11 +41,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const verifyOtp = async (email: string, otp: string) => {
     const response = await authApi.post("/User/OtpVerify", { email, otp });
 
-    // ✅ Save tokens
-    if (response.data.access_token)
-      localStorage.setItem("access_token", response.data.access_token);
-    if (response.data.refresh_token)
-      localStorage.setItem("refresh_token", response.data.refresh_token);
 
     // ✅ Get current user
     const currentUser = await getCurrentUser();
@@ -65,8 +60,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       console.warn("Logout API failed:", err);
     } finally {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
       setUser(null);
     }

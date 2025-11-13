@@ -14,8 +14,8 @@ const menuItems = [
   { icon: <Network size={18} />, label: "Assets", path: "/assets" },
   { icon: <Cpu size={18} />, label: "Devices", path: "/devices" },
   { icon: <Activity size={18} />, label: "Signals", path: "/signals" },
-  { icon: <FileText size={18} />, label: "Reports", path: "/reports" },
-  { icon: <Settings size={18} />, label: "Settings", path: "/settings" },
+  // { icon: <FileText size={18} />, label: "Reports", path: "/reports" },
+  // { icon: <Settings size={18} />, label: "Settings", path: "/settings" },
   { icon: <Trash size={18} />, label: "Deleted Devices", path: "/deleted-devices" },
 ];
 
