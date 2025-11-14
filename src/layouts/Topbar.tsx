@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, User, Menu } from "lucide-react";
+import { User, Menu } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
-import { useAuth } from "@/context/authContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface TopbarProps {
   onToggleSidebar?: () => void;
@@ -23,10 +23,9 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
   const { logout } = useAuth();
   const location = useLocation();
 
-  // ✅ Read login state from location or fallback
   const isLoggedInFromState = location.state?.IsLoggedIn || false;
 
-  // ✅ Read user from localStorage
+  // Read user from localStorage
   const [user, setUser] = useState<any>(() => {
     try {
       return JSON.parse(localStorage.getItem("user") || "null");
@@ -35,7 +34,7 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
     }
   });
 
-  // Update user state if localStorage changes (optional)
+  // Update user state 
   useEffect(() => {
     const handleStorageChange = () => {
       const storedUser = JSON.parse(localStorage.getItem("user") || "null");
@@ -45,7 +44,7 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  // ✅ Logout: clear localStorage & navigate
+  
   const handleLogout = async () => {
       try {
         await logout();
@@ -62,7 +61,7 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
 
   return (
     <header className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 sm:px-6 bg-card backdrop-blur-md border-b border-border shadow-sm transition-colors">
-      {/* Left: Hamburger + Title */}
+      
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -79,11 +78,11 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
         </h1>
       </div>
 
-      {/* Right: User Menu + Theme Toggle */}
+      
       <div className="flex items-center gap-3">
         <ThemeToggle />
 
-        {/* User Dropdown */}
+        
         {user || isLoggedInFromState ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

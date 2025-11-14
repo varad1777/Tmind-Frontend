@@ -1,6 +1,5 @@
-import authApi from "./authApi"; // ✅ Reuse pre-configured axios
+import authApi from "./authApi"; 
 
-// ✅ CRUD endpoints using same authApi instance
 export const getAllUsers = async () => {
   const res = await authApi.get("/User");
   return res.data;
