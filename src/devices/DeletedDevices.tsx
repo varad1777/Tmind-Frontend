@@ -27,7 +27,7 @@ export default function DeletedDevices() {
 
   const {user} = useAuth();
 
-  // ✅ Fetch deleted devices
+  // Fetch deleted devices
   useEffect(() => {
     const fetchDevices = async () => {
       try {
@@ -46,7 +46,7 @@ export default function DeletedDevices() {
     fetchDevices();
   }, []);
 
-  // ✅ Retrieve a deleted device
+  // Retrieve a deleted device
   const retriveDevice = async (deviceId: string) => {
     try {
       await retriveDeviceById(deviceId);
@@ -66,7 +66,7 @@ export default function DeletedDevices() {
     }
   };
 
-  // ✅ Filtered devices by search
+  // Filtered devices by search
   const filteredDevices = devices.filter((d) =>
     d.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -150,7 +150,7 @@ export default function DeletedDevices() {
         </div>
       )}
 
-      {/* Toast Notification Container */}
+      {/* Toast */}
       <ToastContainer />
     </div>
   );

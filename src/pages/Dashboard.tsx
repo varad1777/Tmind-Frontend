@@ -21,7 +21,7 @@ export default function Dashboard() {
         const activeDevices = deviceRes.items || [];
         setTotalDevices(deviceRes.totalCount || activeDevices.length);
 
-        // Fetch deleted devices
+        // deleted devices
         const deletedRes = await getDeletedDeviced();
         setDeletedDevices(deletedRes?.length || 0);
       } catch (err: any) {
@@ -52,10 +52,10 @@ export default function Dashboard() {
     );
   }
 
-  // Example logic for other KPIs (you can modify based on your backend)
-  const departmentCount = 2; // Replace with API logic if available
-  const totalAssets = totalDevices + 50; // Example derived metric
-  const alertsToday = Math.floor(totalDevices * 0.05); // Simulated alerts = 5% of devices
+  // KPIs 
+  const departmentCount = 2; 
+  const totalAssets = totalDevices + 50; 
+  const alertsToday = Math.floor(totalDevices * 0.05); 
 
   return (
     <div className="space-y-6">

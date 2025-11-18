@@ -24,36 +24,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Load user if already logged in (from localStorage)
+  // Load user if already logged
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
     setLoading(false);
   }, []);
 
-  // 🔹 LOGIN (Step 1: Send OTP)
+
   const login = async (email: string, password: string) => {
     await authApi.post("/User/Login", { email, password });
-    // OTP sent — you’ll verify next
   };
 
-  // 🔹 VERIFY OTP (Step 2)
+ 
   const verifyOtp = async (email: string, otp: string) => {
     const response = await authApi.post("/User/OtpVerify", { email, otp });
 
-
-    // ✅ Get current user
     const currentUser = await getCurrentUser();
     setUser(currentUser);
     localStorage.setItem("user", JSON.stringify(currentUser));
   };
 
-  // 🔹 SIGNUP
+ 
   const signup = async (username: string, email: string, password: string) => {
     await authApi.post("/User/Register", { username, email, password });
   };
 
-  // 🔹 LOGOUT
+
   const logout = async () => {
     try {
       await authApi.post("/User/Logout");

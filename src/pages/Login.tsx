@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/authContext"; // ✅ Import Context
+import { useAuth } from "@/context/AuthContext"; 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -90,7 +90,7 @@ const Login: React.FC = () => {
             : "Login to access your TMind dashboard"}
         </p>
 
-        {/* Username (Signup only) */}
+        
         {mode === "signup" && (
           <div>
             <label className="block text-sm mb-1 font-medium">Username</label>
