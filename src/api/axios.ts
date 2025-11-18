@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = import.meta.env.VITE_API_URL || "https://localhost:7034";
+const baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000/devices";
 
 const api = axios.create({
   baseURL: baseURL,  
@@ -13,13 +13,13 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
    
-    if (error.response?.status === 404 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         
         await axios.post(
-          "https://localhost:7023/api/User/refresh-token",
+          "http://localhost:5000/auth/User/refresh-token",
           {},
           { withCredentials: true }
         );

@@ -108,6 +108,7 @@ export default function Devices() {
       try {
         setLoading(true);
         const data = await getDevices(pageNumber, pageSize, debouncedSearch);
+        console.log("Fetched devices:", data);
         setDevices(data.items);
         setTotalPages(data.totalPages);
       } catch (err: any) {

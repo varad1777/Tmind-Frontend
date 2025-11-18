@@ -25,9 +25,11 @@ interface Device {
 // };
 
 export const getDevices = async (pageNumber = 1, pageSize = 10, searchTerm = "") => {
-  const response = await api.get("/api/devices", {
+  console.log("calling getDevices with", { pageNumber, pageSize, searchTerm });
+  const response = await api.get("/devices", {
     params: { pageNumber, pageSize, searchTerm },
   });
+  console.log("API Response:", response.status, response.data);
   return response.data.data; // this contains items, pageNumber, pageSize, totalCount, totalPages
 };
 
@@ -35,7 +37,7 @@ export const getDevices = async (pageNumber = 1, pageSize = 10, searchTerm = "")
  * 🔹 Create a new device
  */
 export const createDevice = async (device: Device) => {
-  const response = await api.post("/api/devices", device);
+  const response = await api.post("/devices", device);
   return response.data.data;
 };
 
@@ -43,7 +45,7 @@ export const createDevice = async (device: Device) => {
  * 🔹 Get device by ID
  */
 export const getDeviceById = async (id: string) => {
-  const response = await api.get(`/api/devices/${id}`);
+  const response = await api.get(`/devices/${id}`);
   return response.data.data;
 };
 
@@ -51,7 +53,7 @@ export const getDeviceById = async (id: string) => {
  * 🔹 Update a device by ID
  */
 export const updateDevice = async (id: string, device: Device) => {
-  const response = await api.put(`/api/devices/${id}`, device);
+  const response = await api.put(`/devices/${id}`, device);
   return response.data.data;
 };
 
@@ -59,13 +61,13 @@ export const updateDevice = async (id: string, device: Device) => {
  * 🔹 Delete a device by ID
  */
 export const deleteDevice = async (id: string) => {
-  const response = await api.delete(`/api/devices/${id}`);
+  const response = await api.delete(`/devices/${id}`);
   return response.data.data;
 
 
 };
 export const retriveDeviceById = async (id: string) => {
-  const response = await api.post(`/api/devices/${id}/restore`);
+  const response = await api.post(`/devices/${id}/restore`);
   return response.data.data;
 
 
@@ -73,6 +75,6 @@ export const retriveDeviceById = async (id: string) => {
 
 
 export const getDeletedDeviced = async () => {
-  const response = await api.get(`api/devices/deleted`);
+  const response = await api.get(`/devices/deleted`);
   return response.data.data;
 };
