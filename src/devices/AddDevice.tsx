@@ -20,12 +20,11 @@ export default function AddDeviceForm() {
 
   const [loading, setLoading] = useState(false);
 
-  // ✅ Full Form Validation (with Toast messages)
+  // Full Form Validation 
   const validateForm = () => {
     const { name, description } = formData;
     const trimmedName = name.trim();
 
-    // 🔸 Device Name validation (can include hyphen but not start with one)
     const nameRegex = /^[A-Za-z][A-Za-z0-9_\- ]{2,99}$/;
     if (!trimmedName) {
       toast.error("Device Name is required.");
@@ -38,7 +37,6 @@ export default function AddDeviceForm() {
       return false;
     }
 
-    // 🔸 Description validation
     if (description && description.length > 255) {
       toast.error("Description must be less than 255 characters.");
       return false;
@@ -81,7 +79,7 @@ export default function AddDeviceForm() {
     } catch (err: any) {
       console.error("Error creating device:", err);
 
-      // Extract proper backend message
+      // Extract backend message
       const backendMessage =
         err?.response?.data?.error || 
         err?.response?.data?.message || 
@@ -121,10 +119,6 @@ export default function AddDeviceForm() {
                 onChange={handleChange}
                 required
               />
-              {/* <p className="text-muted-foreground text-xs mt-1">
-                Allowed: letters, numbers, spaces, underscores (_), hyphens (-).
-                Must start with a letter. Min 3 characters.
-              </p> */}
             </div>
 
             {/* Description */}
@@ -137,9 +131,6 @@ export default function AddDeviceForm() {
                 value={formData.description}
                 onChange={handleChange}
               />
-              {/* <p className="text-muted-foreground text-xs mt-1">
-                Max 255 characters.
-              </p> */}
             </div>
 
             {/* Buttons */}

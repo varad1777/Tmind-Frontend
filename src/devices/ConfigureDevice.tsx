@@ -32,7 +32,7 @@ export default function ConfigureDevice() {
     },
   });
 
-  // 🔹 Fetch device details
+  // Fetch device details
   useEffect(() => {
     if (!deviceId) return;
 
@@ -64,9 +64,9 @@ export default function ConfigureDevice() {
           });
         }
       } catch (error: any) {
-        console.error("❌ Failed to fetch device:", error);
+        console.error("Failed to fetch device:", error);
 
-        // Prevent double toasts in React Strict Mode
+        // Prevent double toasts 
         if (!toastShown) {
           toastShown = true;
           if (error.response?.status === 404) {
@@ -104,7 +104,7 @@ export default function ConfigureDevice() {
     });
   };
 
-  // ✅ Validation
+  // Validation
   const validateForm = () => {
     const { configName, pollInterval, protocolSettings } = formData;
     const { IpAddress, Port, SlaveId } = protocolSettings;

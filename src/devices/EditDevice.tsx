@@ -53,7 +53,7 @@ useEffect(() => {
     const fetchDevice = async () => {
       try {
         const res = await getDeviceById(deviceId);
-        console.log("🔹 Fetched device:", res);
+        console.log("Fetched device:", res);
 
         
 
@@ -80,7 +80,7 @@ useEffect(() => {
       } catch (error: any) {
         console.error("❌ Failed to fetch device:", error);
 
-        // Prevent double toasts in React Strict Mode
+        // Prevent double toasts
         if (!toastShown) {
           toastShown = true;
           if(error.response?.status === 401){
@@ -101,13 +101,12 @@ useEffect(() => {
   }, [deviceId]);
 
 
-  // 🔹 VALIDATION FUNCTION (backend-aligned)
+  // 🔹 VALIDATION FUNCTION 
   const validateForm = () => {
   const { name, description } = deviceDetails;
   const { configName, pollInterval, protocolSettings } = formData;
   const { IpAddress, Port, SlaveId } = protocolSettings;
 
-  // 🔸 Device Name validation (✅ can include hyphen but not start with one)
   const nameRegex = /^[A-Za-z][A-Za-z0-9_\- ]{2,99}$/;
   if (!nameRegex.test(name.trim())) {
     toast.error(
@@ -116,13 +115,11 @@ useEffect(() => {
     return false;
   }
 
-  // 🔸 Description validation
   if (description && description.length > 255) {
     toast.error("Description must be less than 255 characters.");
     return false;
   }
 
-  // 🔸 Configuration Name validation (✅ can include hyphen but not start with one)
   const configNameRegex = /^[A-Za-z][A-Za-z0-9_\- ]{0,99}$/;
 
   if (!configName.trim()) {
@@ -137,13 +134,11 @@ useEffect(() => {
     return false;
   }
 
-  // 🔸 Poll Interval validation (100–300000)
   if (isNaN(Number(pollInterval)) || pollInterval < 100 || pollInterval > 300000) {
     toast.error("Poll interval must be between 100 and 300000 milliseconds.");
     return false;
   }
 
-  // 🔸 IP Address validation
 const ipOrLocalhostRegex =
   /^(https?:\/\/)?(localhost|((25[0-5]|2[0-4]\d|1?\d{1,2})(\.(25[0-5]|2[0-4]\d|1?\d{1,2})){3}))$/;
 
@@ -153,13 +148,11 @@ const ipOrLocalhostRegex =
 }
 
 
-  // 🔸 Port validation
   if (isNaN(Port) || Port < 1 || Port > 65535) {
     toast.error("Port must be between 1 and 65535");
     return false;
   }
 
-  // 🔸 Slave ID validation
   if (isNaN(SlaveId) || SlaveId < 1 || SlaveId > 247) {
     toast.error("Slave ID must be between 1 and 247");
     return false;
@@ -219,7 +212,7 @@ const ipOrLocalhostRegex =
       }
       console.error("Error editing device:", err);
 
-      // Extract proper backend message
+      // Extract backend message
       const backendMessage =
         err?.response?.data?.error || 
         err?.response?.data?.message || 
@@ -306,7 +299,6 @@ const ipOrLocalhostRegex =
               </div>
             </div>
 
-            {/* CONFIGURATION */}
             <div className="rounded-xl border border-border/70 bg-muted/30 p-5 shadow-inner">
               <div className="flex items-center gap-2 mb-4">
                 <Settings2 className="h-5 w-5 text-primary" />
@@ -401,7 +393,6 @@ const ipOrLocalhostRegex =
               </div>
             </div>
 
-            {/* ACTION BUTTONS */}
             <div className="flex justify-between items-center pt-4 border-t border-border/40">
               <Button
                 type="button"
@@ -419,7 +410,7 @@ const ipOrLocalhostRegex =
         </CardContent>
       </Card>
 
-      {/* Toast Container */}
+      {/* Toast */}
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );

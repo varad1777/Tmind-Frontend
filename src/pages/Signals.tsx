@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import type { HubConnection } from "@microsoft/signalr";
-// shadcn/ui components (adjust import paths if different in your project)
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 

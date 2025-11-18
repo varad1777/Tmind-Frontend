@@ -4,7 +4,7 @@ const baseURL = import.meta.env.VITE_API_URL || "https://localhost:7034";
 
 const api = axios.create({
   baseURL: baseURL,  
-  withCredentials: true, // important for cookies
+  withCredentials: true, 
 });
 
 api.interceptors.response.use(

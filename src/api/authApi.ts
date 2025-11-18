@@ -2,7 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "https://localhost:7023/api",
-  withCredentials: true, // important for cookies
+  withCredentials: true, 
 });
 
 api.interceptors.response.use(
@@ -26,7 +26,8 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (err) {
         console.log("Refresh token failed, redirecting to Register");
-        // window.location.href = "/Register";
+        localStorage.removeItem("user");
+        window.location.href = "/";
         return Promise.reject(err);
       }
     }

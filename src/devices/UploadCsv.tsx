@@ -34,7 +34,7 @@ export default function UploadCsv() {
     }
   };
 
-  // Handle submit (frontend only)
+  // Handle submit 
   const handleSubmit = () => {
     if (!file) {
       alert("Please select a CSV file first.");
@@ -44,7 +44,6 @@ export default function UploadCsv() {
     console.log("CSV file submitted:", file.name);
     alert(`CSV file "${file.name}" submitted!`);
 
-    // Reset and navigate
     setFile(null);
     navigate("/devices");
   };

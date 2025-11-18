@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/authContext"; // ✅ Import Context
+import { useAuth } from "@/context/AuthContext"; 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, verifyOtp, signup, user } = useAuth(); // ✅ From Context
+  const { login, verifyOtp, signup, user } = useAuth(); 
 
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [step, setStep] = useState<"credentials" | "otp">("credentials");
@@ -41,14 +41,14 @@ const Login: React.FC = () => {
     return () => clearInterval(interval);
   }, [step, otpResentAt]);
 
-  // 🧮 Format Timer
+  // Timer Format
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
 
-  // ✅ Validation
+  // Validation
   const validate = () => {
     const newErrors: typeof errors = {};
     if (mode === "signup" && !/^[A-Za-z0-9]{3,}$/.test(username)) {
@@ -72,7 +72,7 @@ const Login: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // 🚀 Handle Login / Signup / OTP
+  // Handle Login / Signup / OTP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
@@ -107,11 +107,11 @@ const Login: React.FC = () => {
     }
   };
 
-  // 🔁 Resend OTP
+  // Resend OTP
   const handleResendOTP = async () => {
     setResending(true);
     try {
-      await login(email, password); // 🔁 reuse login()
+      await login(email, password); 
       toast.success("OTP resent successfully!");
       setOtp("");
       setExpired(false);
@@ -129,7 +129,7 @@ const Login: React.FC = () => {
     }
   };
 
-  // 🔐 Redirect if already logged in
+  // Redirect if already logged in
   useEffect(() => {
     if (user) navigate("/dashboard");
   }, [user, navigate]);
@@ -151,7 +151,7 @@ const Login: React.FC = () => {
             : "Enter the 6-digit OTP sent to your email"}
         </p>
 
-        {/* Username (Signup only) */}
+        
         {mode === "signup" && (
           <div>
             <label className="block text-sm mb-1 font-medium">Username</label>
@@ -168,7 +168,7 @@ const Login: React.FC = () => {
           </div>
         )}
 
-        {/* Email + Password */}
+        
         {(mode === "signup" || step === "credentials") && (
           <>
             <div>

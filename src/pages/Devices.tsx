@@ -7,6 +7,7 @@ import {
   Search,
   HdmiPort,
   AlertTriangle,
+  View
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getDevices, deleteDevice } from "@/api/deviceApi";
@@ -28,7 +29,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { useAuth } from "@/context/authContext"; // ✅ Import AuthContext
+import { useAuth } from "@/context/AuthContext"; 
 
 interface Device {
   deviceId: string;
@@ -60,9 +61,9 @@ export default function Devices() {
   const [totalPages, setTotalPages] = useState(1);
 
   const navigate = useNavigate();
-  const { user } = useAuth(); // ✅ Get logged-in user and role
+  const { user } = useAuth(); 
 
-  // --- helper to safely read selected devices from sessionStorage
+
   function readSelectedDevices(): SelectedDevice[] {
     try {
       const raw = sessionStorage.getItem(SESSION_KEY);
@@ -161,19 +162,19 @@ export default function Devices() {
     return sessionSelectedDevices.some((sd) => sd.deviceId === deviceId);
   }
 
-  // ✅ Check if the user is Admin
+  // Check user is Admin
   const isAdmin = user?.role === "Admin";
 
   return (
     <div className="p-6 space-y-8">
-      {/* Header */}
+   
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Devices</h1>
           <p className="text-muted-foreground">Manage all connected devices</p>
         </div>
 
-        {/* ✅ Only Admin can see Add Device */}
+   
         {isAdmin && (
           <Button
             onClick={() => navigate("/devices/add")}
@@ -220,7 +221,7 @@ export default function Devices() {
                     <td className="p-4">{d.description}</td>
                     <td className="p-4 flex justify-center gap-2 flex-wrap">
 
-                      {/* ✅ Admin-only buttons */}
+                      
                       {isAdmin && (
                         <>
                           <Button
@@ -257,7 +258,7 @@ export default function Devices() {
                         </>
                       )}
 
-                      {/* ✅ Everyone can view ports / subscribe */}
+                      
                       <Button
                         variant="outline"
                         size="sm"
@@ -275,11 +276,11 @@ export default function Devices() {
                       >
                         {isSelected ? (
                           <>
-                            <Trash2 className="h-4 w-4" /> Unsubscribe
+                            <View className="h-4 w-4" /> Unsubscribe
                           </>
                         ) : (
                           <>
-                            <HdmiPort className="h-4 w-4" /> Subscribe
+                            <View className="h-4 w-4" /> Subscribe
                           </>
                         )}
                       </Button>)
