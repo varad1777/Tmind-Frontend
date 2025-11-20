@@ -72,7 +72,7 @@ export default function AssetDetails({
             </div>
 
             <div className="flex flex-wrap gap-2 pt-4 mt-4 border-t">
-              {assetType !== "SubMachine" && (
+              {/* {assetType !== "SubMachine" && (
                 <Button onClick={onAddChild} size="sm" variant="outline">
                   <Plus className="h-4 w-4 mr-2" /> Add Sub-Asset
                 </Button>
@@ -80,9 +80,9 @@ export default function AssetDetails({
 
               <Button onClick={onEdit} size="sm" variant="outline">
                 <Edit className="h-4 w-4 mr-2" /> Edit Asset
-              </Button>
+              </Button> */}
 
-              {selectedAsset.isDeleted ? (
+              {/* {selectedAsset.isDeleted ? (
                 <Button onClick={onRestore} size="sm" variant="outline">
                   <RotateCcw className="h-4 w-4 mr-2" /> Restore
                 </Button>
@@ -90,7 +90,7 @@ export default function AssetDetails({
                 <Button onClick={onDelete} size="sm" variant="outline">
                   <Trash2 className="h-4 w-4 mr-2" /> Delete
                 </Button>
-              )}
+              )} */}
 
               {assetType === "SubMachine" && (
                 <Button onClick={onAssignDevice} size="sm" variant="outline">
