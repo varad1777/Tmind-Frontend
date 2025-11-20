@@ -57,7 +57,7 @@ export default function Devices() {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize] = useState(3);
+  const [pageSize] = useState(6);
   const [totalPages, setTotalPages] = useState(1);
 
   const navigate = useNavigate();

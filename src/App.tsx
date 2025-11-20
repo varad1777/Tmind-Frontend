@@ -4,12 +4,13 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Assets from "./pages/Assets";
+import UploadAssetCsv from "./asset/UploadAssetCsv";
 import Devices from "./pages/Devices";
 import AddDeviceForm from "./devices/AddDevice";
 import EditDeviceForm from "./devices/EditDevice";
 import ConfigureDeviceForm from "./devices/ConfigureDevice";
 import PortSettings from "./devices/PortSettings";
-import UploadCsv from "./devices/UploadCsv";
+import UploadDeviceCsv from "./devices/UploadDeviceCsv";
 import Signals from "./pages/Signals";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -26,12 +27,13 @@ export default function App() {
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/assets" element={<Assets />} />
+          <Route path="/assets/upload" element={<UploadAssetCsv />} />
           <Route path="/devices" element={<Devices />} />
           <Route path="/devices/add" element={<AddDeviceForm />} />
           <Route path="/devices/edit/:deviceId" element={<EditDeviceForm />} />
           <Route path="/devices/config/:deviceId" element={<ConfigureDeviceForm />} />
           <Route path="/devices/ports" element={<PortSettings />} />
-          <Route path="/devices/upload" element={<UploadCsv />} />
+          <Route path="/devices/upload" element={<UploadDeviceCsv />} />
           <Route path="/signals" element={<Signals />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />

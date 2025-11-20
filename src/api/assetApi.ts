@@ -1,6 +1,3 @@
-// src/api/assetsApi.ts
-
-// Simulate API delay
 const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 export async function getAssetHierarchy() {
