@@ -1,9 +1,19 @@
 
 
+// export interface Asset {
+//   id: string;
+//   name: string;
+//   type: "Department" | "Line" | "Machine" | "SubMachine";
+//   depth: number;
+//   isDeleted: boolean;
+//   children: Asset[];
+// }
 export interface Asset {
   id: string;
   name: string;
-  type: "Department" | "Line" | "Machine" | "SubMachine";
+  type: string;
+  description: string;
+  path: string;
   depth: number;
   isDeleted: boolean;
   children: Asset[];

@@ -65,10 +65,6 @@ export default function AssetDetails({
                 <p className="font-medium">{selectedAsset.depth}</p>
               </div>
 
-              <div className="col-span-2">
-                <p className="text-muted-foreground text-xs mb-1">Description</p>
-                <p className="font-medium">{selectedAsset.description}</p>
-              </div>
             </div>
 
             <div className="flex flex-wrap gap-2 pt-4 mt-4 border-t">

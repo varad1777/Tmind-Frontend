@@ -5,147 +5,11 @@ import { AssetTree } from "@/asset/AssetTree";
 import { type Asset } from "@/types/asset";
 import { Button } from "@/components/ui/button";
 import AssetDetails from "@/asset/AssetDetails";
+import { getAssetHierarchy } from "@/api/assetApi";
+import { transformHierarchy } from "@/asset/mapBackendToFrontend";
 
 export default function Assets() {
-  const [assets, setAssets] = useState<Asset[]>([
-    {
-      id: "p1",
-      name: "Tata Motors Mumbai Plant",
-      type: "Plant",
-      description: "Main manufacturing plant",
-      path: "Tata Motors Mumbai Plant",
-      depth: 1,
-      isDeleted: false,
-      children: [
-        {
-          id: "d1",
-          name: "Manufacturing Department",
-          type: "Department",
-          description: "Handles automobile manufacturing operations",
-          path: "Tata Motors Mumbai Plant / Manufacturing",
-          depth: 2,
-          isDeleted: false,
-          children: [
-            {
-              id: "l1",
-              name: "Assembly Line 1",
-              type: "Line",
-              description: "Primary assembly line",
-              path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 1",
-              depth: 3,
-              isDeleted: false,
-              children: [
-                {
-                  id: "m1",
-                  name: "Machine 1",
-                  type: "Machine",
-                  description: "Sample machine",
-                  path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 1 / Machine 1",
-                  depth: 4,
-                  isDeleted: false,
-                  children: [
-                    {
-                      id: "sm1",
-                      name: "Sub Machine 1",
-                      type: "SubMachine",
-                      description: "Sample sub machine",
-                      path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 1 / Machine 1 / Sub Machine 1",
-                      depth: 5,
-                      isDeleted: false,
-                      children: [],
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              id: "l2",
-              name: "Assembly Line 2",
-              type: "Line",
-              description: "Secondary assembly line",
-              path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 2",
-              depth: 3,
-              isDeleted: false,
-              children: [],
-            },
-            {
-              id: "l3",
-              name: "Assembly Line 3",
-              type: "Line",
-              description: "Tertiary assembly line",
-              path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 3",
-              depth: 3,
-              isDeleted: false,
-              children: [],
-            },
-          ],
-        },
-        {
-          id: "d2",
-          name: "Painting Department",
-          type: "Department",
-          description: "Paint shop operations",
-          path: "Tata Motors Mumbai Plant / Painting",
-          depth: 2,
-          isDeleted: false,
-          children: [
-            {
-              id: "pl1",
-              name: "Paint Line 1",
-              type: "Line",
-              description: "Base coat paint line",
-              path: "Tata Motors Mumbai Plant / Painting / Paint Line 1",
-              depth: 3,
-              isDeleted: false,
-              children: [
-                {
-                  id: "pm1",
-                  name: "Paint Machine 1",
-                  type: "Machine",
-                  description: "Sample paint machine",
-                  path: "Tata Motors Mumbai Plant / Painting / Paint Line 1 / Paint Machine 1",
-                  depth: 4,
-                  isDeleted: false,
-                  children: [
-                    {
-                      id: "psm1",
-                      name: "Paint Sub Machine 1",
-                      type: "SubMachine",
-                      description: "Sample paint sub machine",
-                      path: "Tata Motors Mumbai Plant / Painting / Paint Line 1 / Paint Machine 1 / Paint Sub Machine 1",
-                      depth: 5,
-                      isDeleted: false,
-                      children: [],
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              id: "pl2",
-              name: "Paint Line 2",
-              type: "Line",
-              description: "Color coating line",
-              path: "Tata Motors Mumbai Plant / Painting / Paint Line 2",
-              depth: 3,
-              isDeleted: false,
-              children: [],
-            },
-            {
-              id: "pl3",
-              name: "Paint Line 3",
-              type: "Line",
-              description: "Finishing paint line",
-              path: "Tata Motors Mumbai Plant / Painting / Paint Line 3",
-              depth: 3,
-              isDeleted: false,
-              children: [],
-            },
-          ],
-        },
-      ],
-    },
-  ]);
+  const [assets, setAssets] = useState<Asset[]>([]);
 
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [loading, setLoading] = useState(true);
@@ -159,7 +23,10 @@ export default function Assets() {
   const loadAssets = async () => {
     setLoading(true);
     try {
-      // fetch assets here if needed
+      const backendData = await getAssetHierarchy();
+      const mapped = transformHierarchy(backendData);
+
+      setAssets(mapped);
     } catch (e) {
       console.error("Failed to load assets", e);
     } finally {
@@ -210,7 +77,7 @@ export default function Assets() {
       {/* Layout */}
       <div className="grid grid-cols-12 gap-6 mt-6">
         {/* LEFT: Asset Tree */}
-        <div className="col-span-12 lg:col-span-7">
+        <div className="col-span-12 lg:col-span-5">
           <Card className="glass-card h-[600px] flex flex-col">
             <CardContent className="p-2 flex-1 overflow-auto">
               {loading ? (
@@ -228,7 +95,7 @@ export default function Assets() {
         </div>
 
         {/* RIGHT: Asset Details */}
-        <div className="col-span-12 lg:col-span-5">
+        <div className="col-span-12 lg:col-span-7">
           <Card className="glass-card h-[600px] flex flex-col">
             <CardHeader>
               <CardTitle className="text-foreground text-lg">Asset Details</CardTitle>
