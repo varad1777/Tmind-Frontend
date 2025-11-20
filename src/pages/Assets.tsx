@@ -9,114 +9,156 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, RotateCcw, Link2 } from "lucide-react";
 
 export default function Assets() {
-  const [assets, setAssets] = useState<Asset[]>([
-    {
-      id: "c1",
-      name: "ABC Industries Pvt Ltd",
-      type: "Company",
-      description: "Head manufacturing company",
-      path: "ABC Industries Pvt Ltd",
-      depth: 0,
-      isDeleted: false,
-      children: [
-        {
-          id: "p1",
-          name: "Pune Plant",
-          type: "Plant",
-          description: "Automobile manufacturing plant",
-          path: "ABC Industries Pvt Ltd / Pune Plant",
-          depth: 1,
-          isDeleted: false,
-          children: [
-            {
-              id: "l1",
-              name: "Assembly Line A",
-              type: "Line",
-              description: "Main car assembly line",
-              path: "ABC Industries Pvt Ltd / Pune Plant / Assembly Line A",
-              depth: 2,
-              isDeleted: false,
-              children: [
-                {
-                  id: "m1",
-                  name: "Robot Arm A1",
-                  type: "Machine",
-                  description: "Welding robot",
-                  path: "ABC Industries Pvt Ltd / Pune Plant / Assembly Line A / Robot Arm A1",
-                  depth: 3,
-                  isDeleted: false,
-                  children: [],
-                },
-                {
-                  id: "m2",
-                  name: "Conveyor A2",
-                  type: "Machine",
-                  description: "Main conveyor system",
-                  path: "ABC Industries Pvt Ltd / Pune Plant / Assembly Line A / Conveyor A2",
-                  depth: 3,
-                  isDeleted: false,
-                  children: [],
-                },
-              ],
-            },
-            {
-              id: "l2",
-              name: "Paint Line B",
-              type: "Line",
-              description: "Car painting line",
-              path: "ABC Industries Pvt Ltd / Pune Plant / Paint Line B",
-              depth: 2,
-              isDeleted: false,
-              children: [
-                {
-                  id: "m3",
-                  name: "Paint Robot B1",
-                  type: "Machine",
-                  description: "Automated painting machine",
-                  path: "ABC Industries Pvt Ltd / Pune Plant / Paint Line B / Paint Robot B1",
-                  depth: 3,
-                  isDeleted: false,
-                  children: [],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: "p2",
-          name: "Mumbai Plant",
-          type: "Plant",
-          description: "Electronics manufacturing plant",
-          path: "ABC Industries Pvt Ltd / Mumbai Plant",
-          depth: 1,
-          isDeleted: false,
-          children: [
-            {
-              id: "l3",
-              name: "PCB Line X",
-              type: "Line",
-              description: "PCB assembly line",
-              path: "ABC Industries Pvt Ltd / Mumbai Plant / PCB Line X",
-              depth: 2,
-              isDeleted: false,
-              children: [
-                {
-                  id: "m4",
-                  name: "Soldering Machine X1",
-                  type: "Machine",
-                  description: "PCB soldering machine",
-                  path: "ABC Industries Pvt Ltd / Mumbai Plant / PCB Line X / Soldering Machine X1",
-                  depth: 3,
-                  isDeleted: false,
-                  children: [],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ]);
+const [assets, setAssets] = useState<Asset[]>([
+  {
+    id: "p1",
+    name: "Tata Motors Mumbai Plant",
+    type: "Plant",
+    description: "Main manufacturing plant",
+    path: "Tata Motors Mumbai Plant",
+    depth: 0,
+    isDeleted: false,
+    children: [
+      // ------------------------------
+      // Department: Manufacturing
+      // ------------------------------
+      {
+        id: "d1",
+        name: "Manufacturing Department",
+        type: "Department",
+        description: "Handles automobile manufacturing operations",
+        path: "Tata Motors Mumbai Plant / Manufacturing",
+        depth: 1,
+        isDeleted: false,
+        children: [
+          {
+            id: "l1",
+            name: "Assembly Line 1",
+            type: "Line",
+            description: "Primary assembly line",
+            path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 1",
+            depth: 2,
+            isDeleted: false,
+            children: [
+              {
+                id: "m1",
+                name: "Machine 1",
+                type: "Machine",
+                description: "Sample machine",
+                path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 1 / Machine 1",
+                depth: 3,
+                isDeleted: false,
+                children: [
+                  {
+                    id: "sm1",
+                    name: "Sub Machine 1",
+                    type: "SubMachine",
+                    description: "Sample sub machine",
+                    path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 1 / Machine 1 / Sub Machine 1",
+                    depth: 4,
+                    isDeleted: false,
+                    children: [],
+                  },
+                ],
+              },
+            ],
+          },
+
+          {
+            id: "l2",
+            name: "Assembly Line 2",
+            type: "Line",
+            description: "Secondary assembly line",
+            path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 2",
+            depth: 2,
+            isDeleted: false,
+            children: [],
+          },
+
+          {
+            id: "l3",
+            name: "Assembly Line 3",
+            type: "Line",
+            description: "Tertiary assembly line",
+            path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 3",
+            depth: 2,
+            isDeleted: false,
+            children: [],
+          },
+        ],
+      },
+
+      // ------------------------------
+      // Department: Painting
+      // ------------------------------
+      {
+        id: "d2",
+        name: "Painting Department",
+        type: "Department",
+        description: "Paint shop operations",
+        path: "Tata Motors Mumbai Plant / Painting",
+        depth: 1,
+        isDeleted: false,
+        children: [
+          {
+            id: "pl1",
+            name: "Paint Line 1",
+            type: "Line",
+            description: "Base coat paint line",
+            path: "Tata Motors Mumbai Plant / Painting / Paint Line 1",
+            depth: 2,
+            isDeleted: false,
+            children: [
+              {
+                id: "pm1",
+                name: "Paint Machine 1",
+                type: "Machine",
+                description: "Sample paint machine",
+                path: "Tata Motors Mumbai Plant / Painting / Paint Line 1 / Paint Machine 1",
+                depth: 3,
+                isDeleted: false,
+                children: [
+                  {
+                    id: "psm1",
+                    name: "Paint Sub Machine 1",
+                    type: "SubMachine",
+                    description: "Sample paint sub machine",
+                    path: "Tata Motors Mumbai Plant / Painting / Paint Line 1 / Paint Machine 1 / Paint Sub Machine 1",
+                    depth: 4,
+                    isDeleted: false,
+                    children: [],
+                  },
+                ],
+              },
+            ],
+          },
+
+          {
+            id: "pl2",
+            name: "Paint Line 2",
+            type: "Line",
+            description: "Color coating line",
+            path: "Tata Motors Mumbai Plant / Painting / Paint Line 2",
+            depth: 2,
+            isDeleted: false,
+            children: [],
+          },
+
+          {
+            id: "pl3",
+            name: "Paint Line 3",
+            type: "Line",
+            description: "Finishing paint line",
+            path: "Tata Motors Mumbai Plant / Painting / Paint Line 3",
+            depth: 2,
+            isDeleted: false,
+            children: [],
+          },
+        ],
+      },
+    ],
+  },
+]);
 
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [loading, setLoading] = useState(true);
@@ -180,11 +222,19 @@ export default function Assets() {
             Explore structure of plants, departments, machines & sub-machines.
           </p>
         </div>
+
+        <Button
+          onClick={() => navigate("/assets/add")}
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          + Import Bulk
+        </Button> 
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-3 mt-3">
 
-        {/* LEFT TREE */}
+      {/* Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        {/* LEFT : Asset Tree */}
         <Card className="glass-card">
           <CardHeader>
             <CardTitle className="text-foreground text-sm">Hierarchy Tree</CardTitle>
