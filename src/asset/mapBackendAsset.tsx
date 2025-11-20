@@ -1,17 +1,16 @@
-export function mapBackendAsset(item: any): Asset {
-  const levelTypeMap: Record<number, Asset["type"]> = {
-    1: "Department",
-    2: "Line",
-    3: "Machine",
-    4: "SubMachine",
-  };
+const levelToType = (level: number): string => {
+  switch (level) {
+    case 1:
+      return "Department";
+    case 2:
+      return "Line";
+    case 3:
+      return "Machine";
+    case 4:
+      return "SubMachine";
+    default:
+      return "Unknown";
+  }
+};
 
-  return {
-    id: item.assetId,
-    name: item.name,
-    type: levelTypeMap[item.level] || "Department",
-    depth: item.level,
-    isDeleted: item.isDeleted,
-    children: item.childrens?.map(mapBackendAsset) || [],
-  };
-}
+export default levelToType;

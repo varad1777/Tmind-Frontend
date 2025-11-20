@@ -17,6 +17,7 @@ import Settings from "./pages/Settings";
 import DeletedDevices from "./devices/DeletedDevices";
 import Profile from "./pages/Profile";
 import Addroot from "./AssetsHierarchy/Addroot";
+import mapBackendAsset from "./asset/mapBackendAsset"; // ✅ import mapping function
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/deleted-devices" element={<DeletedDevices />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/map-asset" element={mapBackendAsset(0)} />
 
           {/* ✅ FIX: Addroot route with dummy onClose */}
           <Route
