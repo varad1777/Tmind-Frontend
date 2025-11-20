@@ -167,7 +167,7 @@ export default function Devices() {
   const isAdmin = user?.role === "Admin";
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-2 space-y-2">
    
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>

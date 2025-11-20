@@ -34,18 +34,24 @@ const AssetTreeNode = ({
   const [isExpanded, setIsExpanded] = useState(true);
   const hasChildren = asset.children && asset.children.length > 0;
 
-  const getIcon = () => {
-    switch (asset.type) {
-      case "Company":
-        return Building2;
-      case "Plant":
-        return Factory;
-      case "Line":
-        return Layers;
-      case "Machine":
-        return Wrench;
-    }
-  };
+const getIcon = () => {
+  switch (asset.type) {
+    case "Company":
+      return Building2;
+    case "Plant":
+      return Factory;
+    case "Department":
+      return Building2; // or any icon you prefer
+    case "Line":
+      return Layers;
+    case "Machine":
+      return Wrench;
+    case "SubMachine":
+      return Wrench; // or a smaller tool icon
+    default:
+      return Layers; // fallback to avoid undefined
+  }
+};
 
   const Icon = getIcon();
   const isSelected = selectedId === asset.id;
