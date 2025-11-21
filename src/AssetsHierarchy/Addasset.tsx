@@ -53,7 +53,7 @@ export default function AddAsset({ parentAsset, onClose }: AddAssetProps) {
       // ⭐ FINAL PAYLOAD (EXACTLY AS YOUR BACKEND WANTS)
       const payload = {
         name: formData.name.trim(),
-        parentId: parentAsset ? parentAsset.assetId : null,
+        parentId: parentAsset?.id,
       };
 
       console.log("Insert Asset Payload:", payload);

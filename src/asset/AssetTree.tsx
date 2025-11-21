@@ -26,7 +26,7 @@ import {
 import Addroot from "../AssetsHierarchy/Addroot";
 import Addasset from "../AssetsHierarchy/Addasset";
 import ConfigureAsset from "../AssetsHierarchy/ConfigureAsset";
-import Editasset from "../AssetsHierarchy/EditAsset";
+import Editasset from "../AssetsHierarchy/Editasset";
 import levelToType from "./mapBackendAsset";
 
 interface AssetTreeProps {

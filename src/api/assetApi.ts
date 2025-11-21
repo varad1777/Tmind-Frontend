@@ -18,6 +18,11 @@ export interface InsertAssetRequest {
   level: number;
 }
 
+export interface UpdateAssetRequest {
+  assetId: string;
+  name: string;
+}
+
 export interface UpdateAssetConfigPayload {
   signalName: string;
   signalAddress: string;
@@ -31,7 +36,7 @@ export interface UpdateAssetConfigPayload {
 // GET ALL ASSET HIERARCHY
 export const getAssetHierarchy = async () => {
   const res = await apiAsset.get("/AssetHierarchy/GetAssetHierarchy");
-  return res.data; // backend returns array
+  return res.data;
 };
 
 // INSERT NEW ASSET
@@ -49,6 +54,12 @@ export const getAssetsByParentId = async (parentId: string) => {
 // DELETE ASSET
 export const deleteAsset = async (assetId: string) => {
   const res = await apiAsset.delete(`/AssetHierarchy/DeleteAsset/${assetId}`);
+  return res.data;
+};
+
+// ⭐⭐⭐ UPDATE ASSET NAME (NEW) ⭐⭐⭐
+export const updateAsset = async (payload: UpdateAssetRequest) => {
+  const res = await apiAsset.put(`/AssetHierarchy/UpdateAsset`, payload);
   return res.data;
 };
 
