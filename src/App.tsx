@@ -3,8 +3,8 @@ import DashboardLayout from "./layouts/DashboardLayout";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import Assets from "./pages/Assets";
-import UploadAssetCsv from "./asset/UploadAssetCsv";
+import Assets from "./pages/Assets"; 
+// import UploadAssetCsv from "./asset/UploadAssetCsv";
 import Devices from "./pages/Devices";
 import AddDeviceForm from "./devices/AddDevice";
 import EditDeviceForm from "./devices/EditDevice";
@@ -16,7 +16,6 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import DeletedDevices from "./devices/DeletedDevices";
 import Profile from "./pages/Profile";
-<<<<<<< HEAD
 import AddPortForm from "./pages/AddPortsForm";
 import { TooltipProvider } from "@/components/ui/tooltip"; // from your shadcn tooltip file
 
@@ -27,40 +26,6 @@ export default function App() {
         <Routes>
 
           <Route path="/" element={<Login />} />
-=======
-import Addroot from "./AssetsHierarchy/Addroot";
-import mapBackendAsset from "./asset/mapBackendAsset"; // ✅ import mapping function
-
-export default function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Login />} />
-
-        <Route element={<DashboardLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/assets" element={<Assets />} />
-          <Route path="/assets/upload" element={<UploadAssetCsv />} />
-          <Route path="/devices" element={<Devices />} />
-          <Route path="/devices/add" element={<AddDeviceForm />} />
-          <Route path="/devices/edit/:deviceId" element={<EditDeviceForm />} />
-          <Route path="/devices/config/:deviceId" element={<ConfigureDeviceForm />} />
-          <Route path="/devices/ports" element={<PortSettings />} />
-          <Route path="/devices/upload" element={<UploadDeviceCsv />} />
-          <Route path="/signals" element={<Signals />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/deleted-devices" element={<DeletedDevices />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/map-asset" element={mapBackendAsset(0)} />
-
-          {/* ✅ FIX: Addroot route with dummy onClose */}
-          <Route
-            path="/add-root"
-            element={<Addroot onClose={() => {}} />}
-          />
-        </Route>
->>>>>>> d75d66c21e9abaf06ba435ac91cb2c892dc4fabd
 
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
@@ -71,7 +36,7 @@ export default function App() {
             <Route path="/devices/config/:deviceId" element={<ConfigureDeviceForm />} />
             <Route path="/devices/ports" element={<PortSettings />} />
             <Route path="/devices/ports/:id" element={<AddPortForm />} />
-            <Route path="/devices/upload" element={<UploadCsv />} />
+            {/* <Route path="/devices/upload" element={<UploadCsv />} /> */}
             <Route path="/signals" element={<Signals />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />

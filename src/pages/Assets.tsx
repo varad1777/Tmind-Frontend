@@ -4,7 +4,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { type Asset } from "@/types/asset";
 import { AssetTree } from "@/asset/AssetTree";
-import { type Asset } from "@/types/asset";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
