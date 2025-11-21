@@ -7,17 +7,28 @@ import { Button } from "@/components/ui/button";
 import AssetDetails from "@/asset/AssetDetails";
 import { getAssetHierarchy } from "@/api/assetApi";
 import { transformHierarchy } from "@/asset/mapBackendToFrontend";
+import AssignDevice from "@/asset/AssignDevice";
 
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export default function Assets() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
+
+  // Assigned device popup
+  const [assignedDevice, setAssignedDevice] = useState<any>(null);
+  const [showAssignDevice, setShowAssignDevice] = useState(false);
 
   const navigate = useNavigate();
 
@@ -29,8 +40,7 @@ export default function Assets() {
     setLoading(true);
     try {
       const backendData = await getAssetHierarchy();
-      const mapped = transformHierarchy(backendData);
-      setAssets(mapped);
+      setAssets(transformHierarchy(backendData));
     } catch (e) {
       console.error("Failed to load assets", e);
     } finally {
@@ -42,46 +52,47 @@ export default function Assets() {
     if (!selectedAsset) return;
     navigate(`/assets/edit/${selectedAsset.id}`);
   };
+
   const onAddChild = () => {
     if (!selectedAsset) return;
     navigate(`/assets/add?parentId=${selectedAsset.id}`);
   };
+
   const onDelete = () => {
     if (!selectedAsset) return;
     alert("Soft delete triggered (dummy)");
   };
+
   const onRestore = () => {
     if (!selectedAsset) return;
     alert("Restore triggered (dummy)");
   };
+
   const onAssignDevice = () => {
     if (!selectedAsset) return;
-    navigate(`/assets/assign-device/${selectedAsset.id}`);
+    setShowAssignDevice(true);
   };
 
-  // CSV Upload Handlers
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile.type === "text/csv") {
-        setCsvFile(droppedFile);
-      } else {
-        alert("Please upload a CSV file only.");
-      }
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    if (file.type !== "text/csv") {
+      alert("Please upload a CSV file only.");
+      return;
     }
+    setCsvFile(file);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const selectedFile = e.target.files[0];
-      if (selectedFile.type === "text/csv") {
-        setCsvFile(selectedFile);
-      } else {
-        alert("Please upload a CSV file only.");
-      }
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "text/csv") {
+      alert("Please upload a CSV file only.");
+      return;
     }
+    setCsvFile(file);
   };
 
   const handleCsvSubmit = () => {
@@ -89,11 +100,10 @@ export default function Assets() {
       alert("Please select a CSV file first.");
       return;
     }
-    console.log("CSV file submitted:", csvFile.name);
     alert(`CSV file "${csvFile.name}" submitted!`);
     setCsvFile(null);
     setShowUploadModal(false);
-    loadAssets(); // refresh tree if needed
+    loadAssets();
   };
 
   return (
@@ -117,6 +127,7 @@ export default function Assets() {
 
       {/* Layout */}
       <div className="grid grid-cols-12 gap-6 mt-6">
+        {/* Asset Tree */}
         <div className="col-span-12 lg:col-span-5">
           <Card className="glass-card h-[600px] flex flex-col">
             <CardContent className="p-2 flex-1 overflow-auto">
@@ -133,6 +144,7 @@ export default function Assets() {
           </Card>
         </div>
 
+        {/* Asset Details */}
         <div className="col-span-12 lg:col-span-7">
           <Card className="glass-card h-[600px] flex flex-col">
             <CardHeader>
@@ -141,6 +153,7 @@ export default function Assets() {
             <CardContent className="p-2 flex-1 overflow-auto">
               <AssetDetails
                 selectedAsset={selectedAsset}
+                assignedDevice={assignedDevice}
                 onEdit={onEdit}
                 onAddChild={onAddChild}
                 onDelete={onDelete}
@@ -152,12 +165,29 @@ export default function Assets() {
         </div>
       </div>
 
+      {/* Assign Device Popup */}
+      {showAssignDevice && selectedAsset && (
+        <AssignDevice
+          open={showAssignDevice}
+          asset={selectedAsset}
+          onClose={() => setShowAssignDevice(false)}
+          onAssign={(device) => {
+            setAssignedDevice(device);
+            setShowAssignDevice(false);
+          }}
+        />
+      )}
+
       {/* Upload CSV Modal */}
       <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
         <DialogContent className="sm:max-w-md border border-border shadow-2xl rounded-2xl p-6 bg-card">
           <DialogHeader>
-            <DialogTitle>Upload CSV</DialogTitle>
-          </DialogHeader>
+  <DialogTitle>Upload CSV</DialogTitle>
+  <DialogDescription>
+    Drag & drop a CSV file here or click to select a file to import assets.
+  </DialogDescription>
+</DialogHeader>
+
 
           <div
             onDragOver={(e) => {
@@ -186,11 +216,7 @@ export default function Assets() {
           </div>
 
           <DialogFooter className="flex justify-end mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowUploadModal(false)}
-              className="mr-2"
-            >
+            <Button variant="outline" onClick={() => setShowUploadModal(false)}>
               Cancel
             </Button>
             <Button onClick={handleCsvSubmit}>Submit CSV</Button>
