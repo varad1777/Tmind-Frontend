@@ -1,339 +1,263 @@
-import React, { useEffect, useState } from "react";
-// import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import React, { useEffect, useState, type DragEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { type Asset } from "@/types/asset";
-import { AssetTree } from "@/asset/AssetTree";
+
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Trash2, RotateCcw, Link2 } from "lucide-react";
+
+import { AssetTree } from "@/asset/AssetTree";
+import AssetDetails from "@/asset/AssetDetails";
+import AssignDevice from "@/asset/AssignDevice";
+
+import { type Asset } from "@/types/asset";
+import { getAssetHierarchy } from "@/api/assetApi";
+import { transformHierarchy } from "@/asset/mapBackendToFrontend";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export default function Assets() {
-const [assets, setAssets] = useState<Asset[]>([
-  {
-    id: "p1",
-    name: "Tata Motors Mumbai Plant",
-    type: "Plant",
-    description: "Main manufacturing plant",
-    path: "Tata Motors Mumbai Plant",
-    depth: 0,
-    isDeleted: false,
-    children: [
-      // ------------------------------
-      // Department: Manufacturing
-      // ------------------------------
-      {
-        id: "d1",
-        name: "Manufacturing Department",
-        type: "Department",
-        description: "Handles automobile manufacturing operations",
-        path: "Tata Motors Mumbai Plant / Manufacturing",
-        depth: 1,
-        isDeleted: false,
-        children: [
-          {
-            id: "l1",
-            name: "Assembly Line 1",
-            type: "Line",
-            description: "Primary assembly line",
-            path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 1",
-            depth: 2,
-            isDeleted: false,
-            children: [
-              {
-                id: "m1",
-                name: "Machine 1",
-                type: "Machine",
-                description: "Sample machine",
-                path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 1 / Machine 1",
-                depth: 3,
-                isDeleted: false,
-                children: [
-                  {
-                    id: "sm1",
-                    name: "Sub Machine 1",
-                    type: "SubMachine",
-                    description: "Sample sub machine",
-                    path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 1 / Machine 1 / Sub Machine 1",
-                    depth: 4,
-                    isDeleted: false,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          },
-
-          {
-            id: "l2",
-            name: "Assembly Line 2",
-            type: "Line",
-            description: "Secondary assembly line",
-            path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 2",
-            depth: 2,
-            isDeleted: false,
-            children: [],
-          },
-
-          {
-            id: "l3",
-            name: "Assembly Line 3",
-            type: "Line",
-            description: "Tertiary assembly line",
-            path: "Tata Motors Mumbai Plant / Manufacturing / Assembly Line 3",
-            depth: 2,
-            isDeleted: false,
-            children: [],
-          },
-        ],
-      },
-
-      // ------------------------------
-      // Department: Painting
-      // ------------------------------
-      {
-        id: "d2",
-        name: "Painting Department",
-        type: "Department",
-        description: "Paint shop operations",
-        path: "Tata Motors Mumbai Plant / Painting",
-        depth: 1,
-        isDeleted: false,
-        children: [
-          {
-            id: "pl1",
-            name: "Paint Line 1",
-            type: "Line",
-            description: "Base coat paint line",
-            path: "Tata Motors Mumbai Plant / Painting / Paint Line 1",
-            depth: 2,
-            isDeleted: false,
-            children: [
-              {
-                id: "pm1",
-                name: "Paint Machine 1",
-                type: "Machine",
-                description: "Sample paint machine",
-                path: "Tata Motors Mumbai Plant / Painting / Paint Line 1 / Paint Machine 1",
-                depth: 3,
-                isDeleted: false,
-                children: [
-                  {
-                    id: "psm1",
-                    name: "Paint Sub Machine 1",
-                    type: "SubMachine",
-                    description: "Sample paint sub machine",
-                    path: "Tata Motors Mumbai Plant / Painting / Paint Line 1 / Paint Machine 1 / Paint Sub Machine 1",
-                    depth: 4,
-                    isDeleted: false,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          },
-
-          {
-            id: "pl2",
-            name: "Paint Line 2",
-            type: "Line",
-            description: "Color coating line",
-            path: "Tata Motors Mumbai Plant / Painting / Paint Line 2",
-            depth: 2,
-            isDeleted: false,
-            children: [],
-          },
-
-          {
-            id: "pl3",
-            name: "Paint Line 3",
-            type: "Line",
-            description: "Finishing paint line",
-            path: "Tata Motors Mumbai Plant / Painting / Paint Line 3",
-            depth: 2,
-            isDeleted: false,
-            children: [],
-          },
-        ],
-      },
-    ],
-  },
-]);
-
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+
+  const [assignedDevice, setAssignedDevice] = useState<any>(null);
+  const [showAssignDevice, setShowAssignDevice] = useState(false);
+
   const [loading, setLoading] = useState(true);
+
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const navigate = useNavigate();
 
+  /* ----------------------------------------------------------
+    LOAD ASSET HIERARCHY
+  ----------------------------------------------------------- */
   useEffect(() => {
     loadAssets();
   }, []);
 
   const loadAssets = async () => {
-    setLoading(true);
     try {
-      const res = await getAssetHierarchy();
-      setAssets(res.map(mapBackendAsset));
-    } catch (e) {
-      console.error("Failed to load assets", e);
+      setLoading(true);
+
+      const backend = await getAssetHierarchy();
+
+      // Convert backend → frontend format
+      const formatted = transformHierarchy(backend);
+      setAssets(formatted);
+    } catch (err) {
+      console.error("Failed to load assets:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ FIX: Added all missing functions so React stops crashing
+  /* ----------------------------------------------------------
+    BUTTON ACTIONS
+  ----------------------------------------------------------- */
+
   const onEdit = () => {
     if (!selectedAsset) return;
-    console.log("Edit Asset:", selectedAsset);
-    navigate(`/assets/edit/${selectedAsset.id}`);
+    navigate(`/assets/edit/${selectedAsset.assetId}`);
   };
 
   const onAddChild = () => {
     if (!selectedAsset) return;
-    console.log("Add child under:", selectedAsset);
-    navigate(`/assets/add?parentId=${selectedAsset.id}`);
+    navigate(`/assets/add?parentId=${selectedAsset.assetId}`);
   };
 
   const onDelete = () => {
     if (!selectedAsset) return;
-    console.log("Delete asset:", selectedAsset);
-    alert("Soft delete triggered (dummy)");
+    alert(`Delete asset → ${selectedAsset.name}`);
   };
 
   const onRestore = () => {
     if (!selectedAsset) return;
-    console.log("Restore asset:", selectedAsset);
-    alert("Restore triggered (dummy)");
+    alert(`Restore asset → ${selectedAsset.name}`);
   };
 
   const onAssignDevice = () => {
     if (!selectedAsset) return;
-    console.log("Assign device to:", selectedAsset);
-    navigate(`/assets/assign-device/${selectedAsset.id}`);
+    setShowAssignDevice(true);
   };
+
+  /* ----------------------------------------------------------
+    CSV UPLOAD
+  ----------------------------------------------------------- */
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragOver(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "text/csv") {
+      alert("Please upload a CSV file only.");
+      return;
+    }
+
+    setCsvFile(file);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "text/csv") {
+      alert("Please upload a CSV file only.");
+      return;
+    }
+
+    setCsvFile(file);
+  };
+
+  const handleCsvSubmit = () => {
+    if (!csvFile) {
+      alert("Please select a CSV file first.");
+      return;
+    }
+
+    alert(`CSV file uploaded: ${csvFile.name}`);
+    setShowUploadModal(false);
+    setCsvFile(null);
+    loadAssets();
+  };
+
+  /* ----------------------------------------------------------
+    UI RENDER
+  ----------------------------------------------------------- */
 
   return (
     <div className="p-3">
 
+      {/* PAGE HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold">Asset Hierarchy</h1>
-          <p className="text-muted-foreground">
-            Explore Departments → Lines → Machines → SubMachines
+          <h1 className="text-2xl font-bold text-foreground mb-1">
+            Asset Hierarchy
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Explore structure of plants, departments, machines & sub-machines.
           </p>
         </div>
 
         <Button
-          onClick={() => navigate("/assets/add")}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          onClick={() => setShowUploadModal(true)}
+          className="bg-primary text-primary-foreground"
         >
           + Import Bulk
-        </Button> 
+        </Button>
       </div>
 
-      {/* Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        {/* LEFT : Asset Tree */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="text-foreground text-lg">Hierarchy Tree</CardTitle>
-          </CardHeader>
-          <CardContent className="p-2">
-            {loading ? (
-              <p className="text-muted-foreground p-2">Loading...</p>
-            ) : (
-              <AssetTree
-                assets={assets}
-                selectedId={selectedAsset?.id || null}
-                onSelect={setSelectedAsset}
-                onAddRoot={() => navigate("/assets/add")}
+      {/* MAIN GRID */}
+      <div className="grid grid-cols-12 gap-6 mt-6">
+
+        {/* LEFT: Tree */}
+        <div className="col-span-12 lg:col-span-5">
+          <Card className="h-[600px] flex flex-col">
+            <CardContent className="p-2 flex-1 overflow-auto">
+              {loading ? (
+                <p className="text-muted-foreground p-2">Loading assets...</p>
+              ) : (
+                <AssetTree
+                  assets={assets}
+                  selectedId={selectedAsset?.assetId || null}
+                  onSelect={setSelectedAsset}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* RIGHT: Asset Details */}
+        <div className="col-span-12 lg:col-span-7">
+          <Card className="h-[600px] flex flex-col">
+            <CardHeader>
+              <CardTitle className="text-lg">Asset Details</CardTitle>
+            </CardHeader>
+
+            <CardContent className="p-2 flex-1 overflow-auto">
+              <AssetDetails
+                selectedAsset={selectedAsset}
+                assignedDevice={assignedDevice}
+                onEdit={onEdit}
+                onAddChild={onAddChild}
+                onDelete={onDelete}
+                onRestore={onRestore}
+                onAssignDevice={onAssignDevice}
               />
-            )}
-          </CardContent>
-        </Card>
-
-        {/* RIGHT DETAILS */}
-        <Card className="glass-card">
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      {selectedAsset?.name}
-</CardTitle>
-
-                
-
-                {selectedAsset && (
-                  <div className="flex items-center mt-1">
-                    {selectedAsset.isDeleted && (
-                      <Badge variant="destructive" className="ml-2">Deleted</Badge>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="p-4">
-            {!selectedAsset ? (
-              <div className="text-muted-foreground font-semibold text-lg py-6 text-center">
-                Select an asset from the tree.
-              </div>
-            ) : (
-              <>
-                <p className="text-sm text-muted-foreground mb-4">{selectedAsset.path}</p>
-
-                <div className="flex flex-wrap gap-2 pt-4 mt-4 border-t"></div>
-
-                <div className="grid grid-cols-2 gap-y-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground text-sm mb-1">Type</p>
-                    <p className="font-medium">{selectedAsset.type}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-muted-foreground text-xs mb-1">Depth</p>
-                    <p className="font-medium">{selectedAsset.depth}</p>
-                  </div>
-
-                  <div className="col-span-2">
-                    <p className="text-muted-foreground text-xs mb-1">Description</p>
-                    <p className="font-medium">{selectedAsset.description}</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 pt-4 mt-4 border-t">
-                  <Button onClick={onEdit} size="sm" variant="outline">
-                    <Edit className="h-4 w-4 mr-2" /> Edit Asset
-                  </Button>
-
-                  <Button onClick={onAddChild} size="sm" variant="outline">
-                    <Plus className="h-4 w-4 mr-2" /> Add Sub-Asset
-                  </Button>
-
-                  {selectedAsset.isDeleted ? (
-                    <Button onClick={onRestore} size="sm" variant="outline">
-                      <RotateCcw className="h-4 w-4 mr-2" /> Restore
-                    </Button>
-                  ) : (
-                    <Button onClick={onDelete} size="sm" variant="outline">
-                      <Trash2 className="h-4 w-4 mr-2" /> Delete
-                    </Button>
-                  )}
-
-                  {selectedAsset.type === "Machine" && (
-                    <Button onClick={onAssignDevice} size="sm" variant="outline">
-                      <Link2 className="h-4 w-4 mr-2" /> Assign Device
-                    </Button>
-                  )}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
       </div>
+
+      {/* Assign Device Popup */}
+      {showAssignDevice && selectedAsset && (
+        <AssignDevice
+          open={showAssignDevice}
+          asset={selectedAsset}
+          onClose={() => setShowAssignDevice(false)}
+          onAssign={(device) => {
+            setAssignedDevice(device);
+            setShowAssignDevice(false);
+          }}
+        />
+      )}
+
+      {/* CSV Upload Modal */}
+      <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
+        <DialogContent className="sm:max-w-md p-6 bg-card rounded-2xl border shadow-xl">
+          <DialogHeader>
+            <DialogTitle>Upload CSV</DialogTitle>
+            <DialogDescription>
+              Drag & drop a CSV file here or click to select.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            className={`w-full h-48 border-2 rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer transition ${
+              dragOver ? "border-primary bg-primary/10" : "border-border bg-card"
+            }`}
+          >
+            {csvFile ? (
+              <p className="font-medium">{csvFile.name}</p>
+            ) : (
+              <p className="text-muted-foreground">
+                Drag & drop a CSV file or click to select
+              </p>
+            )}
+
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileSelect}
+              className="absolute inset-0 opacity-0 cursor-pointer"
+            />
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setShowUploadModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCsvSubmit}>Submit CSV</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
