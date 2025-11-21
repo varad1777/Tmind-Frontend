@@ -10,9 +10,6 @@ interface AssetDetailsProps {
   selectedAsset: Asset | null;
   assignedDevice: any | null;
   onAssignDevice: () => void;
-  onEdit: () => void;
-  onAddChild: () => void;
-  onDelete: () => void;
   onRestore: () => void;
 }
 
@@ -20,12 +17,9 @@ export default function AssetDetails({
   selectedAsset,
   assignedDevice,
   onAssignDevice,
-  onEdit,
-  onAddChild,
-  onDelete,
   onRestore,
 }: AssetDetailsProps) {
-  const assetType = selectedAsset ? levelToType(selectedAsset.depth) : "";
+  const assetType = selectedAsset ? levelToType(selectedAsset.level) : "";
 
   return (
     <Card className="glass-card">
@@ -52,36 +46,20 @@ export default function AssetDetails({
           </div>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mb-4">{selectedAsset.path}</p>
-
-            <div className="grid grid-cols-2 gap-y-4 text-sm">
+            <div className="grid grid-cols-2 gap-y-4 text-sm mb-4">
               <div>
                 <p className="text-muted-foreground text-sm mb-1">Type</p>
                 <p className="font-medium">{assetType}</p>
               </div>
 
               <div>
-                <p className="text-muted-foreground text-xs mb-1">Depth</p>
-                <p className="font-medium">{selectedAsset.depth}</p>
+                <p className="text-muted-foreground text-xs mb-1">Level</p>
+                <p className="font-medium">{selectedAsset.level}</p>
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 pt-4 mt-4 border-t">
-              {/* <Button onClick={onEdit} size="sm" variant="outline">
-                Edit
-              </Button>
-
-              <Button onClick={onAddChild} size="sm" variant="outline">
-                Add Child
-              </Button>
-
-              {!selectedAsset.isDeleted && (
-                <Button onClick={onDelete} size="sm" variant="outline">
-                  Soft Delete
-                </Button>
-              )} */}
-
               {selectedAsset.isDeleted && (
                 <Button onClick={onRestore} size="sm" variant="outline">
                   Restore
@@ -89,7 +67,7 @@ export default function AssetDetails({
               )}
 
               {/* Assign Device button */}
-              {(selectedAsset.depth === 4 || selectedAsset.depth === 5) && (
+              {(selectedAsset.level === 3 || selectedAsset.level === 4) && (
                 <Button
                   onClick={onAssignDevice}
                   size="sm"

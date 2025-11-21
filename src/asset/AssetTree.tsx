@@ -11,6 +11,7 @@ import {
   Settings2,
   AlertTriangle,
 } from "lucide-react";
+
 import { type Asset } from "@/types/asset";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -28,13 +29,17 @@ import Addasset from "../AssetsHierarchy/Addasset";
 import ConfigureAsset from "../AssetsHierarchy/ConfigureAsset";
 import Editasset from "../AssetsHierarchy/Editasset";
 import levelToType from "./mapBackendAsset";
+import DeleteAsset from "@/AssetsHierarchy/DeleteAsset";
+
+import { deleteAsset } from "@/api/assetApi";
+import { toast } from "react-toastify";
 
 interface AssetTreeProps {
   assets: Asset[];
   selectedId: string | null;
   onSelect: (asset: Asset) => void;
   onEdit?: (asset: Asset) => void;
-  onDelete?: (asset: Asset) => void;
+  onDelete?: (asset: Asset) => void; // refresh asset tree in parent
 }
 
 interface AssetTreeNodeProps {
@@ -44,12 +49,16 @@ interface AssetTreeNodeProps {
   onEdit?: (asset: Asset) => void;
   onDelete?: (asset: Asset) => void;
   searchTerm: string;
+
   setShowAddAssetModal: (v: boolean) => void;
   setAssetForAdd: (asset: Asset | null) => void;
+
   setShowConfigureModal: (v: boolean) => void;
   setAssetForConfig: (asset: Asset | null) => void;
+
   setShowEditModal: (v: boolean) => void;
   setAssetForEdit: (asset: Asset | null) => void;
+
   setOpenDeleteDialog: (v: boolean) => void;
   setAssetToDelete: (asset: Asset | null) => void;
 }
@@ -61,16 +70,21 @@ const AssetTreeNode = ({
   onEdit,
   onDelete,
   searchTerm,
+
   setShowAddAssetModal,
   setAssetForAdd,
+
   setShowConfigureModal,
   setAssetForConfig,
+
   setShowEditModal,
   setAssetForEdit,
+
   setOpenDeleteDialog,
   setAssetToDelete,
 }: AssetTreeNodeProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
+
   const hasChildren = asset.children?.length > 0;
   const isSelected = selectedId === asset.id;
 
@@ -94,60 +108,61 @@ const AssetTreeNode = ({
     }
   })();
 
-  // actions based on level NOT depth
-  const actions = asset.level >= 4
-    ? [
-        {
-          icon: <Settings2 className="h-4 w-4" />,
-          name: "Config",
-          onClick: () => {
-            setAssetForConfig(asset);
-            setShowConfigureModal(true);
+  // actions based on level
+  const actions =
+    asset.level >= 5
+      ? [
+          {
+            icon: <Settings2 className="h-4 w-4" />,
+            name: "Config",
+            onClick: () => {
+              setAssetForConfig(asset);
+              setShowConfigureModal(true);
+            },
           },
-        },
-        {
-          icon: <Edit className="h-4 w-4" />,
-          name: "Edit",
-          onClick: () => {
-            setAssetForEdit(asset);
-            setShowEditModal(true);
+          {
+            icon: <Edit className="h-4 w-4" />,
+            name: "Edit",
+            onClick: () => {
+              setAssetForEdit(asset);
+              setShowEditModal(true);
+            },
           },
-        },
-        {
-          icon: <Trash2 className="h-4 w-4" />,
-          name: "Delete",
-          onClick: () => {
-            setAssetToDelete(asset);
-            setOpenDeleteDialog(true);
+          {
+            icon: <Trash2 className="h-4 w-4" />,
+            name: "Delete",
+            onClick: () => {
+              setAssetToDelete(asset);
+              setOpenDeleteDialog(true);
+            },
           },
-        },
-      ]
-    : [
-        {
-          icon: <Edit className="h-4 w-4" />,
-          name: "Edit",
-          onClick: () => {
-            setAssetForEdit(asset);
-            setShowEditModal(true);
+        ]
+      : [
+          {
+            icon: <Edit className="h-4 w-4" />,
+            name: "Edit",
+            onClick: () => {
+              setAssetForEdit(asset);
+              setShowEditModal(true);
+            },
           },
-        },
-        {
-          icon: <Plus className="h-4 w-4" />,
-          name: "Add Sub-Asset",
-          onClick: () => {
-            setAssetForAdd(asset);
-            setShowAddAssetModal(true);
+          {
+            icon: <Plus className="h-4 w-4" />,
+            name: "Add Sub-Asset",
+            onClick: () => {
+              setAssetForAdd(asset);
+              setShowAddAssetModal(true);
+            },
           },
-        },
-        {
-          icon: <Trash2 className="h-4 w-4" />,
-          name: "Delete",
-          onClick: () => {
-            setAssetToDelete(asset);
-            setOpenDeleteDialog(true);
+          {
+            icon: <Trash2 className="h-4 w-4" />,
+            name: "Delete",
+            onClick: () => {
+              setAssetToDelete(asset);
+              setOpenDeleteDialog(true);
+            },
           },
-        },
-      ];
+        ];
 
   return (
     <div>
@@ -166,11 +181,16 @@ const AssetTreeNode = ({
                 setIsExpanded(!isExpanded);
               }}
             >
-              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
             </button>
           ) : (
             <div className="w-4" />
           )}
+
           <Icon className="h-4 w-4" />
           <span className="text-sm">{asset.name}</span>
         </div>
@@ -221,8 +241,9 @@ const AssetTreeNode = ({
   );
 };
 
-export const AssetTree = ({ assets, selectedId, onSelect, onEdit, onDelete }: AssetTreeProps) => {
+export const AssetTree = ({ assets, selectedId, onSelect, onDelete }: AssetTreeProps) => {
   const [searchTerm, setSearchTerm] = useState("");
+
   const [showAddRootModal, setShowAddRootModal] = useState(false);
   const [showAddAssetModal, setShowAddAssetModal] = useState(false);
   const [assetForAdd, setAssetForAdd] = useState<Asset | null>(null);
@@ -235,6 +256,24 @@ export const AssetTree = ({ assets, selectedId, onSelect, onEdit, onDelete }: As
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);
+
+  // ----------------------------------------
+  // DELETE HANDLER
+  // ----------------------------------------
+  const handleConfirmDelete = async () => {
+    if (!assetToDelete) return;
+
+    try {
+      await deleteAsset(assetToDelete.id);
+      toast.success("Asset deleted successfully!");
+
+      if (onDelete) onDelete(assetToDelete); // refresh tree in parent
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to delete asset");
+    }
+
+    setOpenDeleteDialog(false);
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -261,7 +300,6 @@ export const AssetTree = ({ assets, selectedId, onSelect, onEdit, onDelete }: As
             asset={asset}
             selectedId={selectedId}
             onSelect={onSelect}
-            onEdit={onEdit}
             onDelete={onDelete}
             searchTerm={searchTerm}
             setShowAddAssetModal={setShowAddAssetModal}
@@ -276,7 +314,7 @@ export const AssetTree = ({ assets, selectedId, onSelect, onEdit, onDelete }: As
         ))}
       </div>
 
-      {/* Modals */}
+      {/* Add Root */}
       {showAddRootModal && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
@@ -286,6 +324,7 @@ export const AssetTree = ({ assets, selectedId, onSelect, onEdit, onDelete }: As
         </div>
       )}
 
+      {/* Add Sub-Asset */}
       {showAddAssetModal && assetForAdd && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-xl p-6 w-[400px]">
@@ -294,10 +333,12 @@ export const AssetTree = ({ assets, selectedId, onSelect, onEdit, onDelete }: As
         </div>
       )}
 
+      {/* Configure */}
       {showConfigureModal && assetForConfig && (
         <ConfigureAsset asset={assetForConfig} onClose={() => setShowConfigureModal(false)} />
       )}
 
+      {/* Edit */}
       {showEditModal && assetForEdit && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-xl p-6 w-[400px]">
@@ -306,41 +347,13 @@ export const AssetTree = ({ assets, selectedId, onSelect, onEdit, onDelete }: As
         </div>
       )}
 
-      {/* Delete Dialog */}
-      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-        <DialogContent className="sm:max-w-md border border-border shadow-2xl rounded-2xl p-6 bg-card">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="bg-red-100 dark:bg-red-900/40 p-3 rounded-full">
-              <AlertTriangle className="h-12 w-12 text-red-600 dark:text-red-400" />
-            </div>
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold text-red-600 dark:text-red-400">
-                Confirm Deletion
-              </DialogTitle>
-            </DialogHeader>
-            <p className="text-sm text-muted-foreground text-center">
-              Are you sure you want to delete{" "}
-              <span className="font-medium text-foreground">{assetToDelete?.name}</span>?
-            </p>
-            <DialogFooter className="flex w-full justify-between pt-4">
-              <Button variant="outline" onClick={() => setOpenDeleteDialog(false)} className="w-[45%]">
-                No, Keep it
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  if (assetToDelete && onDelete) onDelete(assetToDelete);
-                  setOpenDeleteDialog(false);
-                }}
-                className="w-[45%] flex gap-2 bg-red-600 hover:bg-red-700 text-white"
-              >
-                <Trash2 className="h-4 w-4" />
-                Yes, Delete it
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DeleteAsset
+        asset={assetToDelete}
+        open={openDeleteDialog}
+        onClose={() => setOpenDeleteDialog(false)}
+        onDeleted={() => onDelete?.(assetToDelete!)}
+      />
+
     </div>
   );
 };
