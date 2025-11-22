@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 
 export type RegisterPayload = {
   registerId?: string;
+  // we store display style like 40001 to match backend detection logic
   registerAddress: number;
   registerLength: number;
   dataType: string;
@@ -20,11 +21,14 @@ export type RegisterPayload = {
   isHealthy: boolean;
   byteOrder?: "Big" | "Little" | null;
   wordSwap?: boolean;
+  // new fields for UI helpers (not required by backend)
+  registerType?: "coil" | "discrete" | "input" | "holding";
+  signalBase?: number; // the 0001 part (1-based)
 };
 
-export type PortData = {
-  devicePortId?: string;
-  portIndex: number;
+export type SlaveData = {
+  deviceSlaveId?: string;
+  slaveIndex: number;    // treated as slave/unit id in this UI
   registers: RegisterPayload[];
   isHealthy: boolean;
 };
@@ -38,35 +42,78 @@ const defaultRegister: RegisterPayload = {
   isHealthy: true,
   byteOrder: "Big",
   wordSwap: false,
+  registerType: "holding",
+  signalBase: 1
 };
 
 export default function ModbusPortManager() {
-  const [ports, setPorts] = useState<PortData[]>([]);
-  const [selectedPortIndex, setSelectedPortIndex] = useState<number | null>(null);
+  const [slaves, setSlaves] = useState<SlaveData[]>([]);
+  const [selectedSlaveIndex, setSelectedSlaveIndex] = useState<number | null>(null);
   const [editingRegisterIdx, setEditingRegisterIdx] = useState<number | null>(null);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [registerForm, setRegisterForm] = useState<RegisterPayload>({ ...defaultRegister });
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [signals, setSignals] = useState<Array<{ id: number; name: string }>>([]);
   const params = useParams<{ id?: string }>();
   const deviceId = params.id;
 
-  const selectedPort = ports.find(p => p.portIndex === selectedPortIndex) ?? null;
+  const selectedSlave = slaves.find(p => p.slaveIndex === selectedSlaveIndex) ?? null;
 
-  const updateRegisterForm = <K extends keyof RegisterPayload>(key: K, value: RegisterPayload[K]) => {
-    setRegisterForm(prev => ({ ...prev, [key]: value }));
-    setError(null);
+  // Helper: returns the leading digit based on register type
+  const typeDigit = (t?: RegisterPayload["registerType"]) => {
+    switch (t) {
+      case "coil": return 0;
+      case "discrete": return 1;
+      case "input": return 3;
+      case "holding":
+      default: return 4;
+    }
+  };
+  // Build display address string like "40001" and return numeric
+  const buildDisplayAddress = (t: RegisterPayload["registerType"], base: number) => {
+    const leading = typeDigit(t);
+    const baseStr = String(base).padStart(4, "0"); // 0001
+    const disp = `${leading}${baseStr}`;
+    return Number(disp);
   };
 
-  const loadPorts = useCallback(async () => {
+  // update helper, keep registerType and signalBase in sync with registerAddress
+  const updateRegisterForm = <K extends keyof RegisterPayload>(key: K, value: RegisterPayload[K]) => {
+    setRegisterForm(prev => {
+      const next = { ...prev, [key]: value } as RegisterPayload;
+
+      // if user updated registerType or signalBase, recompute display address
+      if (key === "registerType" || key === "signalBase") {
+        const rt = (key === "registerType" ? (value as any) : next.registerType) ?? "holding";
+        const sb = (key === "signalBase" ? (value as any) : next.signalBase) ?? 1;
+        next.registerAddress = buildDisplayAddress(rt, sb);
+      }
+
+      // if user directly typed registerAddress numeric (rare), try to decode type+base
+      if (key === "registerAddress") {
+        const ra = Number(value as any);
+        const s = String(ra).padStart(5, "0"); // ensure 5 chars like 40001
+        const leading = Number(s[0]);
+        const base = Number(s.slice(1));
+        // map leading to registerType
+        const map: Record<number, RegisterPayload["registerType"]> = { 0: "coil", 1: "discrete", 3: "input", 4: "holding" };
+        next.registerType = map[leading] ?? "holding";
+        next.signalBase = base;
+      }
+
+      return next;
+    });
+  };
+
+  // load slaves (ports) from your API — unchanged from original logic but renamed
+  const loadSlaves = useCallback(async () => {
     if (!deviceId) return;
     try {
       const res = await api.get(`/devices/${deviceId}/ports`);
       const arr = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-      const mapped: PortData[] = (arr || []).map((p: any) => ({
-        devicePortId: p.devicePortId ?? undefined,
-        portIndex: p.portIndex,         
+      const mapped: SlaveData[] = (arr || []).map((p: any) => ({
+        deviceSlaveId: p.deviceSlaveId ?? undefined,
+        slaveIndex: p.slaveIndex,
         isHealthy: p.isHealthy ?? true,
         registers: (p.registers || []).map((r: any) => ({
           registerId: r.registerId ?? undefined,
@@ -77,22 +124,73 @@ export default function ModbusPortManager() {
           unit: r.unit ?? null,
           isHealthy: r.isHealthy ?? true,
           byteOrder: r.byteOrder ?? null,
-          wordSwap: !!r.wordSwap
+          wordSwap: !!r.wordSwap,
+          // UI-only parse: attempt to set registerType and signalBase if address looks like 40001
+          registerType: (() => {
+            const s = String(r.registerAddress);
+            if (s.length >= 5) {
+              const leading = Number(s[0]);
+              if (leading === 0) return "coil";
+              if (leading === 1) return "discrete";
+              if (leading === 3) return "input";
+              return "holding";
+            }
+            return "holding";
+          })(),
+          signalBase: (() => {
+            const s = String(r.registerAddress).padStart(5, "0");
+            return Number(s.slice(1));
+          })()
         }))
       }));
-      const sorted = [...mapped].sort((a, b) => b.portIndex - a.portIndex);
-      setPorts(sorted);
-      if (sorted.length > 0 && selectedPortIndex === null) {
-        setSelectedPortIndex(sorted[0].portIndex);
+      const sorted = [...mapped].sort((a, b) => b.slaveIndex - a.slaveIndex);
+      setSlaves(sorted);
+      if (sorted.length > 0 && selectedSlaveIndex === null) {
+        setSelectedSlaveIndex(sorted[0].slaveIndex);
       }
     } catch (err) {
-      console.error("Failed to load ports", err);
+      console.error("Failed to load slaves", err);
     }
-  }, [deviceId, selectedPortIndex]);
+  }, [deviceId, selectedSlaveIndex]);
 
   useEffect(() => {
-    loadPorts();
-  }, [deviceId, loadPorts]);
+    loadSlaves();
+  }, [deviceId, loadSlaves]);
+
+  // Fetch available signals for selected slave (example API path). Fallback to default list.
+  const fetchSignals = useCallback(async (slaveIndex: number) => {
+    if (!deviceId) return;
+    try {
+      // Preferred: backend endpoint returning available signals for the slave/unit
+      const res = await api.get(`/devices/${deviceId}/slaves/${slaveIndex}/signals`); // adapt path if needed
+      const arr = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      // Expect items like { id: 1, name: "Voltage" }
+      if (arr && arr.length > 0) {
+        setSignals(arr.map((s: any) => ({ id: s.id ?? s.address ?? 1, name: s.name ?? s.label ?? `Signal ${s.id}` })));
+        return;
+      }
+    } catch (err) {
+      // ignore and use fallback
+      // console.warn("signals fetch failed, falling back to defaults", err);
+    }
+
+    // fallback signals if backend doesn't provide them:
+    setSignals([
+      { id: 1, name: "Voltage" },
+      { id: 2, name: "Current" },
+      { id: 3, name: "Temperature" },
+      { id: 4, name: "Pressure" }
+    ]);
+  }, [deviceId]);
+
+  // When selected slave changes, refresh signals (and reset register form)
+  useEffect(() => {
+    if (selectedSlaveIndex === null) return;
+    fetchSignals(selectedSlaveIndex);
+    setRegisterForm({ ...defaultRegister, registerType: defaultRegister.registerType, signalBase: defaultRegister.signalBase, registerAddress: buildDisplayAddress(defaultRegister.registerType!, defaultRegister.signalBase!) });
+    setShowRegisterForm(false);
+    setEditingRegisterIdx(null);
+  }, [selectedSlaveIndex, fetchSignals]);
 
   const validateRegister = (reg: RegisterPayload, currentRegisters: RegisterPayload[]) => {
     if (!Number.isInteger(reg.registerAddress) || reg.registerAddress < 0 || reg.registerAddress > 65535)
@@ -105,77 +203,84 @@ export default function ModbusPortManager() {
     const duplicate = currentRegisters.some((r, idx) =>
       idx !== editingRegisterIdx && r.registerAddress === reg.registerAddress
     );
-    if (duplicate) return "Register address already exists in this port";
+    if (duplicate) return "Register address already exists in this slave";
 
     return null;
   };
 
   const handleSaveRegister = () => {
-    if (!selectedPort) return;
-    const validationError = validateRegister(registerForm, selectedPort.registers);
+    if (!selectedSlave) return;
+    // ensure the computed registerAddress is up to date (in case complex edits were done)
+    const form = { ...registerForm, registerAddress: buildDisplayAddress(registerForm.registerType!, registerForm.signalBase ?? 1) };
+    const validationError = validateRegister(form, selectedSlave.registers);
     if (validationError) {
       toast.error(validationError);
       return;
     }
 
-    setPorts(prev =>
-      prev.map(port => {
-        if (port.portIndex !== selectedPort.portIndex) return port;
+    setSlaves(prev =>
+      prev.map(slave => {
+        if (slave.slaveIndex !== selectedSlave.slaveIndex) return slave;
 
         let updatedRegisters: RegisterPayload[];
         if (editingRegisterIdx !== null) {
-          updatedRegisters = port.registers.map((r, idx) =>
-            idx === editingRegisterIdx ? { ...registerForm } : r
+          updatedRegisters = slave.registers.map((r, idx) =>
+            idx === editingRegisterIdx ? { ...form } : r
           );
           toast.success("Register updated locally, please save to persist");
         } else {
-          updatedRegisters = [...port.registers, { ...registerForm }];
+          updatedRegisters = [...slave.registers, { ...form }];
           toast.success("Register added locally, please save to persist");
         }
 
-        return { ...port, registers: updatedRegisters };
+        return { ...slave, registers: updatedRegisters };
       })
     );
 
-    setRegisterForm({ ...defaultRegister });
+    setRegisterForm({ ...defaultRegister, registerAddress: buildDisplayAddress(defaultRegister.registerType!, defaultRegister.signalBase!) });
     setEditingRegisterIdx(null);
     setShowRegisterForm(false);
-    setError(null);
   };
 
   const handleDeleteRegister = (idx: number) => {
-    if (!selectedPort) return;
-    const updated = ports.map(port =>
-      port.portIndex === selectedPort.portIndex
-        ? { ...port, registers: port.registers.filter((_, i) => i !== idx) }
-        : port
+    if (!selectedSlave) return;
+    const updated = slaves.map(slave =>
+      slave.slaveIndex === selectedSlave.slaveIndex
+        ? { ...slave, registers: slave.registers.filter((_, i) => i !== idx) }
+        : slave
     );
-    setPorts(updated);
+    setSlaves(updated);
     toast.success("Register deleted locally, please save to persist");
   };
 
   const handleEditRegister = (idx: number) => {
-    if (!selectedPort) return;
-    setRegisterForm({ ...selectedPort.registers[idx] });
+    if (!selectedSlave) return;
+    const reg = selectedSlave.registers[idx];
+    // decode registerAddress to type+base for form fields if possible
+    const s = String(reg.registerAddress).padStart(5, "0");
+    const leading = Number(s[0]);
+    const base = Number(s.slice(1));
+    const map: Record<number, RegisterPayload["registerType"]> = { 0: "coil", 1: "discrete", 3: "input", 4: "holding" };
+    setRegisterForm({ ...reg, registerType: map[leading] ?? "holding", signalBase: base });
     setEditingRegisterIdx(idx);
     setShowRegisterForm(true);
   };
 
-  const handleAddNewPort = () => {
-    const newPortIndex = ports.length > 0 ? Math.max(...ports.map(p => p.portIndex)) + 1 : 0;
-    const newPort: PortData = { portIndex: newPortIndex, registers: [], isHealthy: true };
+  const handleAddNewSlave = () => {
+    const newslaveIndex = slaves.length > 0 ? Math.max(...slaves.map(p => p.slaveIndex)) + 1 : 1;
+    const newSlave: SlaveData = { slaveIndex: newslaveIndex, registers: [], isHealthy: true };
 
-    setPorts(prev => [...prev, newPort]);
-    setSelectedPortIndex(newPortIndex);
+    setSlaves(prev => [...prev, newSlave]);
+    setSelectedSlaveIndex(newslaveIndex);
     setShowRegisterForm(false);
-    toast.success("New port created locally, please add registers now");
+    toast.success("New slave created locally, please add registers now");
   };
 
-  const buildPayload = (port: PortData) => {
+  const buildPayload = (slave: SlaveData) => {
     return {
-      portIndex: port.portIndex,
-      isHealthy: port.isHealthy,
-      registers: port.registers.map(r => ({
+      slaveIndex: slave.slaveIndex,
+      isHealthy: slave.isHealthy,
+      registers: slave.registers.map(r => ({
         registerAddress: r.registerAddress,
         registerLength: r.registerLength,
         dataType: r.dataType,
@@ -188,42 +293,35 @@ export default function ModbusPortManager() {
     };
   };
 
-  const saveCurrentPort = async () => {
-    if (!selectedPort || !deviceId) return;
+  const saveCurrentSlave = async () => {
+    if (!selectedSlave || !deviceId) return;
 
-    const payload = buildPayload(selectedPort);
+    const payload = buildPayload(selectedSlave);
     setIsSaving(true);
 
     try {
-      if (selectedPort.devicePortId) {
-        await api.put(`/devices/${deviceId}/ports/${selectedPort.portIndex}`, payload);
-        toast.success("Port updated on server");
+      if (selectedSlave.deviceSlaveId) {
+        await api.put(`/devices/${deviceId}/ports/${selectedSlave.slaveIndex}`, payload);
+        toast.success("Slave updated on server");
       } else {
         await api.post(`/devices/${deviceId}/ports`, payload);
-        toast.success("Port created on server");
+        toast.success("Slave created on server");
       }
 
-      await loadPorts();
+      await loadSlaves();
     } catch (err: any) {
-      console.error("Failed to save port", err);
-      toast.error(err?.response?.data?.error || err?.message || "Failed to save port");
+      console.error("Failed to save slave", err);
+      toast.error(err?.response?.data?.error || err?.message || "Failed to save slave");
     } finally {
       setIsSaving(false);
     }
   };
 
   const cancelRegisterForm = () => {
-    setRegisterForm({ ...defaultRegister });
+    setRegisterForm({ ...defaultRegister, registerAddress: buildDisplayAddress(defaultRegister.registerType!, defaultRegister.signalBase!) });
     setEditingRegisterIdx(null);
     setShowRegisterForm(false);
-    setError(null);
   };
-
-  useEffect(() => {
-    if (!success) return;
-    const t = setTimeout(() => setSuccess(null), 2000);
-    return () => clearTimeout(t);
-  }, [success]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-blue-50">
@@ -235,72 +333,68 @@ export default function ModbusPortManager() {
               <Cable className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Port Manager</h1>
-              <p className="text-xs text-slate-500">Modbus Configuration</p>
+              <h1 className="text-2xl font-bold text-slate-900">Slave Manager</h1>
+              <p className="text-xs text-slate-500">Modbus Slave / Registers Configuration</p>
             </div>
           </div>
           <Button 
-            onClick={handleAddNewPort} 
+            onClick={handleAddNewSlave} 
             className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all"
           >
             <Plus className="w-5 h-5 mr-2" />
-            New Port
+            New Slave
           </Button>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Ports Sidebar */}
-         <div className="grid grid-cols-2 gap-3 p-3 max-h-96 overflow-y-auto">
-  {ports.length === 0 ? (
-    <div className="p-8 text-center col-span-2">
-      <Database className="w-10 h-10 mx-auto text-slate-300 mb-2" />
-      <p className="text-xs text-slate-500">No ports yet</p>
-    </div>
-  ) : (
-    ports.map(port => (
-      <button
-        key={port.portIndex}
-        onClick={() => {
-          setSelectedPortIndex(port.portIndex);
-          setShowRegisterForm(false);
-          setEditingRegisterIdx(null);
-          setRegisterForm({ ...defaultRegister });
-          setError(null);
-        }}
-        className={`p-4 text-left rounded-xl border transition-all ${
-          selectedPortIndex === port.portIndex
-            ? "bg-gradient-to-r from-blue-50 to-blue-100 border-blue-600"
-            : "hover:bg-slate-50 border-slate-200"
-        }`}
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-slate-900 text-sm">
-              Port {port.portIndex}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">
-              {port.registers.length} registers
-            </p>
+          {/* Slaves Sidebar */}
+          <div className="grid grid-cols-2 gap-3 p-3 max-h-96 overflow-y-auto">
+            {slaves.length === 0 ? (
+              <div className="p-8 text-center col-span-2">
+                <Database className="w-10 h-10 mx-auto text-slate-300 mb-2" />
+                <p className="text-xs text-slate-500">No slaves yet</p>
+              </div>
+            ) : (
+              slaves.map(slave => (
+                <button
+                  key={slave.slaveIndex}
+                  onClick={() => {
+                    setSelectedSlaveIndex(slave.slaveIndex);
+                    setShowRegisterForm(false);
+                    setEditingRegisterIdx(null);
+                    setRegisterForm({ ...defaultRegister, registerAddress: buildDisplayAddress(defaultRegister.registerType!, defaultRegister.signalBase!) });
+                  }}
+                  className={`p-4 text-left rounded-xl border transition-all ${
+                    selectedSlaveIndex === slave.slaveIndex
+                      ? "bg-gradient-to-r from-blue-50 to-blue-100 border-blue-600"
+                      : "hover:bg-slate-50 border-slate-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-900 text-sm">
+                        Slave {slave.slaveIndex}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {slave.registers.length} registers
+                      </p>
+                    </div>
+                    <div
+                      className={`w-3 h-3 rounded-full ${slave.isHealthy ? "bg-emerald-500" : "bg-red-500"}`}
+                    ></div>
+                  </div>
+                </button>
+              ))
+            )}
           </div>
-          <div
-            className={`w-3 h-3 rounded-full ${
-              port.isHealthy ? "bg-emerald-500" : "bg-red-500"
-            }`}
-          ></div>
-        </div>
-      </button>
-    ))
-  )}
-</div>
-
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {selectedPort ? (
+            {selectedSlave ? (
               <div className="space-y-6">
-                {/* Port Header Card */}
+                {/* Slave Header Card */}
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -308,16 +402,12 @@ export default function ModbusPortManager() {
                         <Settings2 className="w-6 h-6 text-blue-600" />
                       </div>
                       <div>
-                        <h2 className="text-xl font-bold text-slate-900">Port {selectedPort.portIndex}</h2>
+                        <h2 className="text-xl font-bold text-slate-900">Slave {selectedSlave.slaveIndex}</h2>
                         <p className="text-sm text-slate-500">Configuration</p>
                       </div>
                     </div>
-                    <div className={`px-4 py-2 rounded-full font-semibold text-sm ${
-                      selectedPort.isHealthy 
-                        ? "bg-emerald-100 text-emerald-700" 
-                        : "bg-red-100 text-red-700"
-                    }`}>
-                      {selectedPort.isHealthy ? "Healthy" : "Unhealthy"}
+                    <div className={`px-4 py-2 rounded-full font-semibold text-sm ${selectedSlave.isHealthy ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                      {selectedSlave.isHealthy ? "Healthy" : "Unhealthy"}
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -332,7 +422,7 @@ export default function ModbusPortManager() {
                       </Button>
                     )}
                     <Button 
-                      onClick={saveCurrentPort} 
+                      onClick={saveCurrentSlave} 
                       disabled={isSaving}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl"
                     >
@@ -344,7 +434,7 @@ export default function ModbusPortManager() {
                       ) : (
                         <>
                           <Save className="w-4 h-4 mr-2" />
-                          Save Port
+                          Save Slave
                         </>
                       )}
                     </Button>
@@ -364,17 +454,51 @@ export default function ModbusPortManager() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                      {/* Register Type */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-slate-700">Register Address</Label>
+                        <Label className="text-sm font-medium text-slate-700">Register Type</Label>
+                        <Select value={registerForm.registerType} onValueChange={(v) => updateRegisterForm("registerType", v as any)}>
+                          <SelectTrigger className="rounded-xl border-slate-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="coil">Coil (0xxxx)</SelectItem>
+                            <SelectItem value="discrete">Discrete Input (1xxxx)</SelectItem>
+                            <SelectItem value="input">Input Register (3xxxx)</SelectItem>
+                            <SelectItem value="holding">Holding Register (4xxxx)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Signal selection (populated from backend or fallback) */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-slate-700">Signal (0001)</Label>
+                        <Select value={String(registerForm.signalBase ?? 1)} onValueChange={(v) => updateRegisterForm("signalBase", Number(v))}>
+                          <SelectTrigger className="rounded-xl border-slate-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {signals.map(sig => (
+                              <SelectItem key={sig.id} value={String(sig.id)}>{String(sig.id).padStart(4,'0')} — {sig.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-slate-400 mt-1">Select which signal (0001 etc). Combined with type becomes 40001 / 30005 etc.</p>
+                      </div>
+
+                      {/* Display Address (computed) */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-slate-700">Display Address (computed)</Label>
                         <Input 
                           type="number" 
                           value={registerForm.registerAddress} 
-                          min={0} 
-                          max={65535}
                           onChange={(e) => updateRegisterForm("registerAddress", Number(e.target.value))}
-                          className="rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                          className="rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 font-mono"
                         />
+                        <p className="text-xs text-slate-400 mt-1">This is the 5-digit Modbus style address (e.g., 40001). You can edit directly if needed.</p>
                       </div>
+
+                      {/* Length */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-slate-700">Register Length</Label>
                         <Input 
@@ -386,6 +510,8 @@ export default function ModbusPortManager() {
                           className="rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                         />
                       </div>
+
+                      {/* Data Type */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-slate-700">Data Type</Label>
                         <Select value={registerForm.dataType} onValueChange={(v) => updateRegisterForm("dataType", v)}>
@@ -401,6 +527,8 @@ export default function ModbusPortManager() {
                           </SelectContent>
                         </Select>
                       </div>
+
+                      {/* Scale */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-slate-700">Scale Factor</Label>
                         <Input 
@@ -411,6 +539,8 @@ export default function ModbusPortManager() {
                           className="rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                         />
                       </div>
+
+                      {/* Unit */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-slate-700">Unit</Label>
                         <Select value={registerForm.unit ?? "__none"} onValueChange={(v) => updateRegisterForm("unit", v === "__none" ? null : v)}>
@@ -427,6 +557,8 @@ export default function ModbusPortManager() {
                           </SelectContent>
                         </Select>
                       </div>
+
+                      {/* Byte Order */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-slate-700">Byte Order</Label>
                         <Select value={registerForm.byteOrder ?? "Big"} onValueChange={(v) => updateRegisterForm("byteOrder", v as any)}>
@@ -480,7 +612,7 @@ export default function ModbusPortManager() {
                 )}
 
                 {/* Registers List */}
-                {selectedPort.registers.length === 0 ? (
+                {selectedSlave.registers.length === 0 ? (
                   <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
                     <Database className="w-12 h-12 mx-auto text-slate-300 mb-3" />
                     <p className="text-slate-500 text-sm">No registers configured</p>
@@ -504,7 +636,7 @@ export default function ModbusPortManager() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 bg-white">
-                          {selectedPort.registers.map((reg, idx) => (
+                          {selectedSlave.registers.map((reg, idx) => (
                             <tr key={idx} className="hover:bg-slate-50 transition-colors">
                               <td className="px-6 py-4 text-sm font-mono font-medium text-slate-900">{reg.registerAddress}</td>
                               <td className="px-6 py-4 text-sm text-slate-700">{reg.registerLength}</td>
@@ -514,11 +646,7 @@ export default function ModbusPortManager() {
                               <td className="px-6 py-4 text-sm text-slate-700">{reg.byteOrder || "—"}</td>
                               <td className="px-6 py-4 text-sm text-slate-700">{reg.wordSwap ? "Yes" : "No"}</td>
                               <td className="px-6 py-4 text-sm">
-                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                                  reg.isHealthy 
-                                    ? "bg-emerald-100 text-emerald-700 border border-emerald-200" 
-                                    : "bg-red-100 text-red-700 border border-red-200"
-                                }`}>
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${reg.isHealthy ? "bg-emerald-100 text-emerald-700 border border-emerald-200" : "bg-red-100 text-red-700 border border-red-200"}`}>
                                   {reg.isHealthy ? "Healthy" : "Unhealthy"}
                                 </span>
                               </td>
@@ -553,8 +681,8 @@ export default function ModbusPortManager() {
             ) : (
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 text-center">
                 <Database className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-600 text-lg font-semibold">Select a Port</p>
-                <p className="text-slate-500 text-sm mt-2">Choose a port from the sidebar to manage its registers</p>
+                <p className="text-slate-600 text-lg font-semibold">Select a Slave</p>
+                <p className="text-slate-500 text-sm mt-2">Choose a slave from the sidebar to manage its registers</p>
               </div>
             )}
           </div>
