@@ -8,8 +8,8 @@ import { useNavigate } from "react-router-dom";
 
 type TelemetryDto = {
   deviceId: string;
-  devicePortId: string;
-  portIndex: number;
+  deviceSlaveId: string;
+  slaveIndex: number;
   registerAddress: number;
   signalType: string;
   value: number;
@@ -25,13 +25,13 @@ type RegisterState = {
   last: number;
 };
 
-type PortState = {
-  portIndex: number;
+type slaveState = {
+  slaveIndex: number;
   registers: Map<number, RegisterState>;
 };
 
 type DeviceState = {
-  ports: Map<number, PortState>;
+  slaves: Map<number, slaveState>;
   lastUpdate: number | null;
 };
 
@@ -49,7 +49,7 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
   const [devices, setDevices] = useState<DevicesMap>(() => new Map());
   const [deviceNames, setDeviceNames] = useState<Map<string, string>>(() => new Map());
   const [expandedDevices, setExpandedDevices] = useState<Set<string>>(new Set());
-  const [expandedPorts, setExpandedPorts] = useState<Set<string>>(new Set());
+  const [expandedslaves, setExpandedslaves] = useState<Set<string>>(new Set());
   const connRef = useRef<HubConnection | null>(null);
   const [startupError, setStartupError] = useState<string | null>(null);
   const [startupErrorDetail, setStartupErrorDetail] = useState<string | null>(null);
@@ -66,15 +66,15 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
     for (const [deviceId, dev] of dm.entries()) {
       out[deviceId] = {
         lastUpdate: dev.lastUpdate,
-        ports: {},
+        slaves: {},
       };
-      for (const [portIndex, port] of dev.ports.entries()) {
-        out[deviceId].ports[portIndex] = {
-          portIndex: port.portIndex,
+      for (const [slaveIndex, slave] of dev.slaves.entries()) {
+        out[deviceId].slaves[slaveIndex] = {
+          slaveIndex: slave.slaveIndex,
           registers: {},
         };
-        for (const [regAddr, reg] of port.registers.entries()) {
-          out[deviceId].ports[portIndex].registers[regAddr] = {
+        for (const [regAddr, reg] of slave.registers.entries()) {
+          out[deviceId].slaves[slaveIndex].registers[regAddr] = {
             registerAddress: reg.registerAddress,
             signalType: reg.signalType,
             unit: reg.unit,
@@ -94,14 +94,14 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
       const parsed = JSON.parse(raw);
       for (const deviceId of Object.keys(parsed)) {
         const devObj = parsed[deviceId];
-        const portsMap = new Map<number, PortState>();
-        const ports = devObj.ports || {};
+        const slavesMap = new Map<number, slaveState>();
+        const slaves = devObj.slaves || {};
         
-        for (const portKey of Object.keys(ports)) {
-          const portIndex = Number(portKey);
-          const portObj = ports[portKey];
+        for (const slaveKey of Object.keys(slaves)) {
+          const slaveIndex = Number(slaveKey);
+          const slaveObj = slaves[slaveKey];
           const registersMap = new Map<number, RegisterState>();
-          const registers = portObj.registers || {};
+          const registers = slaveObj.registers || {};
           
           for (const regKey of Object.keys(registers)) {
             const regAddr = Number(regKey);
@@ -115,14 +115,14 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
             });
           }
           
-          portsMap.set(portIndex, {
-            portIndex,
+          slavesMap.set(slaveIndex, {
+            slaveIndex,
             registers: registersMap,
           });
         }
         
         dm.set(deviceId, { 
-          ports: portsMap, 
+          slaves: slavesMap, 
           lastUpdate: devObj.lastUpdate ?? Date.now() 
         });
       }
@@ -217,17 +217,17 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
         const filtered = new Map<string, DeviceState>();
         for (const s of selected) {
           if (dm.has(s.deviceId)) filtered.set(s.deviceId, dm.get(s.deviceId)!);
-          else filtered.set(s.deviceId, { ports: new Map<number, PortState>(), lastUpdate: null });
+          else filtered.set(s.deviceId, { slaves: new Map<number, slaveState>(), lastUpdate: null });
         }
         setDevices(filtered);
       } else {
         const initialPanels = new Map<string, DeviceState>();
-        for (const s of selected) initialPanels.set(s.deviceId, { ports: new Map<number, PortState>(), lastUpdate: null });
+        for (const s of selected) initialPanels.set(s.deviceId, { slaves: new Map<number, slaveState>(), lastUpdate: null });
         setDevices(initialPanels);
       }
     } else {
       const initialPanels = new Map<string, DeviceState>();
-      for (const s of selected) initialPanels.set(s.deviceId, { ports: new Map<number, PortState>(), lastUpdate: null });
+      for (const s of selected) initialPanels.set(s.deviceId, { slaves: new Map<number, slaveState>(), lastUpdate: null });
       setDevices(initialPanels);
     }
 
@@ -304,13 +304,13 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
 
       setDevices(prev => {
         const next = new Map(prev);
-        const dev = next.get(deviceId) ?? { ports: new Map<number, PortState>(), lastUpdate: Date.now() };
+        const dev = next.get(deviceId) ?? { slaves: new Map<number, slaveState>(), lastUpdate: Date.now() };
 
         for (const itemRaw of payload) {
           const item = {
             deviceId: itemRaw.deviceId ?? itemRaw.DeviceId,
-            devicePortId: itemRaw.devicePortId ?? itemRaw.DevicePortId,
-            portIndex: itemRaw.portIndex ?? itemRaw.PortIndex,
+            deviceSlaveId: itemRaw.deviceSlaveId ?? itemRaw.deviceSlaveId,
+            slaveIndex: itemRaw.slaveIndex ?? itemRaw.slaveIndex,
             registerAddress: itemRaw.registerAddress ?? itemRaw.RegisterAddress,
             signalType: itemRaw.signalType ?? itemRaw.SignalType,
             value: itemRaw.value ?? itemRaw.Value,
@@ -318,23 +318,23 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
             timestamp: itemRaw.timestamp ?? itemRaw.Timestamp
           };
 
-          const portIndex = Number(item.portIndex ?? -1);
+          const slaveIndex = Number(item.slaveIndex ?? -1);
           const registerAddress = Number(item.registerAddress ?? 0);
           const value = Number(item.value ?? 0);
           const unit = String(item.unit ?? "");
           const signalType = String(item.signalType ?? "");
 
-          if (portIndex < 0 || registerAddress === 0) continue;
+          if (slaveIndex < 0 || registerAddress === 0) continue;
 
-          // Get or create port
-          let port = dev.ports.get(portIndex);
-          if (!port) {
-            port = { portIndex, registers: new Map<number, RegisterState>() };
-            dev.ports.set(portIndex, port);
+          // Get or create slave
+          let slave = dev.slaves.get(slaveIndex);
+          if (!slave) {
+            slave = { slaveIndex, registers: new Map<number, RegisterState>() };
+            dev.slaves.set(slaveIndex, slave);
           }
 
           // Get or create register
-          let register = port.registers.get(registerAddress);
+          let register = slave.registers.get(registerAddress);
           if (!register) {
             register = {
               registerAddress,
@@ -343,7 +343,7 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
               history: [],
               last: value,
             };
-            port.registers.set(registerAddress, register);
+            slave.registers.set(registerAddress, register);
           }
 
           // Update register
@@ -401,7 +401,7 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
           
           setDevices(prev => {
             const next = new Map(prev);
-            if (!next.has(id)) next.set(id, { ports: new Map<number, PortState>(), lastUpdate: null });
+            if (!next.has(id)) next.set(id, { slaves: new Map<number, slaveState>(), lastUpdate: null });
             return next;
           });
           
@@ -458,7 +458,7 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
           await connRef.current.invoke("SubscribeToDevice", id);
           setDevices(prev => {
             const next = new Map(prev);
-            if (!next.has(id)) next.set(id, { ports: new Map<number, PortState>(), lastUpdate: null });
+            if (!next.has(id)) next.set(id, { slaves: new Map<number, slaveState>(), lastUpdate: null });
             return next;
           });
         } catch (err) {
@@ -490,9 +490,9 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
     });
   }
 
-  function togglePort(deviceId: string, portIndex: number) {
-    const key = `${deviceId}:${portIndex}`;
-    setExpandedPorts(prev => {
+  function toggleslave(deviceId: string, slaveIndex: number) {
+    const key = `${deviceId}:${slaveIndex}`;
+    setExpandedslaves(prev => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -527,7 +527,7 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
               <Database className="w-8 h-8 text-blue-600" />
               Device Signals Monitor
             </h1>
-            <p className="text-slate-600 mt-1">Real-time telemetry organized by ports and registers</p>
+            <p className="text-slate-600 mt-1">Real-time telemetry organized by slaves and registers</p>
           </div>
         </div>
 
@@ -569,8 +569,8 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
         <div className="space-y-4">
           {[...devices.entries()].map(([deviceId, dev]) => {
             const isDeviceExpanded = expandedDevices.has(deviceId);
-            const portCount = dev.ports.size;
-            const totalRegisters = [...dev.ports.values()].reduce((sum, port) => sum + port.registers.size, 0);
+            const slaveCount = dev.slaves.size;
+            const totalRegisters = [...dev.slaves.values()].reduce((sum, slave) => sum + slave.registers.size, 0);
 
             return (
               <Card key={deviceId} className="border-slate-200 shadow-lg overflow-hidden">
@@ -590,7 +590,7 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
                           {getDeviceDisplayName(deviceId)}
                         </CardTitle>
                         <p className="text-sm text-slate-600 mt-1">
-                          {portCount} port{portCount !== 1 ? 's' : ''} • {totalRegisters} register{totalRegisters !== 1 ? 's' : ''}
+                          {slaveCount} slave{slaveCount !== 1 ? 's' : ''} • {totalRegisters} register{totalRegisters !== 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>
@@ -603,31 +603,31 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
 
                 {isDeviceExpanded && (
                   <CardContent className="p-0">
-                    {dev.ports.size === 0 ? (
+                    {dev.slaves.size === 0 ? (
                       <div className="p-8 text-center text-slate-500">
                         <p>No telemetry data received yet</p>
                       </div>
                     ) : (
                       <div className="divide-y divide-slate-200">
-                        {[...dev.ports.entries()].map(([portIndex, port]) => {
-                          const isPortExpanded = expandedPorts.has(`${deviceId}:${portIndex}`);
-                          const registerCount = port.registers.size;
+                        {[...dev.slaves.entries()].map(([slaveIndex, slave]) => {
+                          const isslaveExpanded = expandedslaves.has(`${deviceId}:${slaveIndex}`);
+                          const registerCount = slave.registers.size;
 
                           return (
-                            <div key={portIndex}>
+                            <div key={slaveIndex}>
                               <div
                                 className="p-4 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
-                                onClick={() => togglePort(deviceId, portIndex)}
+                                onClick={() => toggleslave(deviceId, slaveIndex)}
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
-                                    {isPortExpanded ? (
+                                    {isslaveExpanded ? (
                                       <ChevronDown className="w-4 h-4 text-slate-600" />
                                     ) : (
                                       <ChevronRight className="w-4 h-4 text-slate-600" />
                                     )}
                                     <div>
-                                      <h3 className="font-semibold text-slate-900">Port {portIndex}</h3>
+                                      <h3 className="font-semibold text-slate-900">slave {slaveIndex}</h3>
                                       <p className="text-xs text-slate-600 mt-0.5">
                                         {registerCount} register{registerCount !== 1 ? 's' : ''}
                                       </p>
@@ -636,7 +636,7 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
                                 </div>
                               </div>
 
-                              {isPortExpanded && (
+                              {isslaveExpanded && (
                                 <div className="p-6 bg-white">
                                   <div className="overflow-x-auto">
                                     <table className="w-full">
@@ -660,7 +660,7 @@ export default function Signals({ hubUrl = "http://localhost:5000/devices/hubs/m
                                         </tr>
                                       </thead>
                                       <tbody className="divide-y divide-slate-200">
-                                        {[...port.registers.entries()].map(([regAddr, reg]) => (
+                                        {[...slave.registers.entries()].map(([regAddr, reg]) => (
                                           <tr key={regAddr} className="hover:bg-slate-50 transition-colors">
                                             <td className="px-4 py-4 text-sm font-mono font-medium text-slate-900">
                                               {reg.registerAddress}
