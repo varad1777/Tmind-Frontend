@@ -25,10 +25,18 @@ import { toast } from "react-toastify";
 export type BackendAsset = {
   assetId: string;
   name: string;
-  childrens: BackendAsset[];
+  childrens: BackendAsset[] | null;
   parentId: string | null;
   level: number;
   isDeleted: boolean;
+};
+
+// -------------------- Normalize Backend Data --------------------
+const normalizeAssets = (assets: BackendAsset[]): BackendAsset[] => {
+  return assets.map(a => ({
+    ...a,
+    childrens: Array.isArray(a.childrens) ? normalizeAssets(a.childrens) : [],
+  }));
 };
 
 // -------------------- Helper Functions --------------------
@@ -37,7 +45,7 @@ const removeAssetById = (assets: BackendAsset[], id: string): BackendAsset[] => 
     .filter(a => a.assetId !== id)
     .map(a => ({
       ...a,
-      childrens: removeAssetById(a.childrens || [], id),
+      childrens: removeAssetById(a.childrens ?? [], id),
     }));
 };
 
@@ -46,19 +54,17 @@ const addAssetToTree = (
   parentId: string | null,
   newAsset: BackendAsset
 ): BackendAsset[] => {
-  // If no parent → add to root
   if (!parentId) return [...list, newAsset];
 
   return list.map(asset =>
     asset.assetId === parentId
-      ? { ...asset, childrens: [...asset.childrens, newAsset] }
-      : { ...asset, childrens: addAssetToTree(asset.childrens, parentId, newAsset) }
+      ? { ...asset, childrens: [...(asset.childrens ?? []), newAsset] }
+      : { ...asset, childrens: addAssetToTree(asset.childrens ?? [], parentId, newAsset) }
   );
 };
 
 // -------------------- Component --------------------
 export default function Assets() {
-  // State
   const [assets, setAssets] = useState<BackendAsset[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<BackendAsset | null>(null);
 
@@ -81,7 +87,7 @@ export default function Assets() {
     try {
       setLoading(true);
       const backendData: BackendAsset[] = await getAssetHierarchy();
-      setAssets(backendData);
+      setAssets(normalizeAssets(backendData));
     } catch (err) {
       console.error("Failed to load assets:", err);
       toast.error("Failed to load assets. Please try again.");
@@ -108,12 +114,9 @@ export default function Assets() {
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOver(false);
-
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
-
     if (!validateCsv(file)) return;
-
     setCsvFile(file);
     toast.info(`Selected: ${file.name}`);
   };
@@ -121,9 +124,7 @@ export default function Assets() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (!validateCsv(file)) return;
-
     setCsvFile(file);
     toast.info(`Selected: ${file.name}`);
   };
@@ -168,16 +169,15 @@ export default function Assets() {
               ) : (
                 <AssetTree
                   assets={assets}
-                  selectedId={selectedAsset?.assetId || null}
+                  selectedId={selectedAsset?.assetId ?? null}
                   onSelect={setSelectedAsset}
                   onDelete={(deletedAsset) => {
-                    setAssets((prev) => removeAssetById(prev, deletedAsset.assetId));
+                    setAssets(prev => removeAssetById(prev, deletedAsset.assetId));
                     toast.success(`✅ "${deletedAsset.name}" deleted successfully`);
                   }}
-                  onAdd={(newAsset) => {
-                    setAssets((prev) => addAssetToTree(prev, newAsset.parentId, newAsset));
-                    // toast.success(`✅ "${newAsset.name}" created`);
-                  }}
+                  onAdd={() => {
+                  loadAssets(); // ✅ refresh state from DB
+                }}
                 />
               )}
             </CardContent>

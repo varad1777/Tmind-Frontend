@@ -20,7 +20,6 @@ import Editasset from "../AssetsHierarchy/Editasset";
 import DeleteAsset from "@/AssetsHierarchy/DeleteAsset";
 
 import levelToType from "./mapBackendAsset";
-import { deleteAsset } from "@/api/assetApi";
 import { toast } from "react-toastify";
 
 export interface BackendAsset {
@@ -32,7 +31,7 @@ export interface BackendAsset {
   isDeleted: boolean;
 }
 
-// ✅ Recursive Add — Pure, Immutable Tree Update
+// ✅ Recursive Add (Immutable)
 export const addAssetToTree = (
   list: BackendAsset[],
   parentId: string | null,
@@ -47,7 +46,7 @@ export const addAssetToTree = (
   );
 };
 
-// ✅ Recursive Delete — Pure, Immutable
+// ✅ Recursive Delete (Immutable)
 export const removeAssetById = (assets: BackendAsset[], id: string): BackendAsset[] =>
   assets
     .filter((a) => a.assetId !== id)
@@ -56,44 +55,20 @@ export const removeAssetById = (assets: BackendAsset[], id: string): BackendAsse
       childrens: removeAssetById(a.childrens, id),
     }));
 
-// ---------------------------------------- NODE COMPONENT
-interface AssetTreeNodeProps {
-  asset: BackendAsset;
-  selectedId: string | null;
-  onSelect: (asset: BackendAsset) => void;
-  onAdd: (newAsset: BackendAsset) => void;
-  onDelete: (asset: BackendAsset) => void;
-  searchTerm: string;
 
-  setShowAddAssetModal: (v: boolean) => void;
-  setAssetForAdd: (asset: BackendAsset | null) => void;
-
-  setShowConfigureModal: (v: boolean) => void;
-  setAssetForConfig: (asset: BackendAsset | null) => void;
-
-  setShowEditModal: (v: boolean) => void;
-  setAssetForEdit: (asset: BackendAsset | null) => void;
-
-  setOpenDeleteDialog: (v: boolean) => void;
-  setAssetToDelete: (asset: BackendAsset | null) => void;
-}
-
+// ✅ Single Tree Node Component
 const AssetTreeNode = ({
   asset,
   selectedId,
   onSelect,
-  onAdd,
-  onDelete,
   searchTerm,
   setShowAddAssetModal,
   setAssetForAdd,
-  setShowConfigureModal,
-  setAssetForConfig,
   setShowEditModal,
   setAssetForEdit,
   setOpenDeleteDialog,
   setAssetToDelete,
-}: AssetTreeNodeProps) => {
+}: any) => {
   const [isExpanded, setIsExpanded] = useState(true);
 
   const hasChildren = asset.childrens?.length > 0;
@@ -138,7 +113,7 @@ const AssetTreeNode = ({
           <span className="text-sm">{asset.name}</span>
         </div>
 
-        {/* Actions */}
+        {/* ACTION BUTTONS */}
         <div className="flex gap-1">
           <button
             onClick={(e) => {
@@ -183,13 +158,9 @@ const AssetTreeNode = ({
               asset={child}
               selectedId={selectedId}
               onSelect={onSelect}
-              onAdd={onAdd}
-              onDelete={onDelete}
               searchTerm={searchTerm}
               setShowAddAssetModal={setShowAddAssetModal}
               setAssetForAdd={setAssetForAdd}
-              setShowConfigureModal={setShowConfigureModal}
-              setAssetForConfig={setAssetForConfig}
               setShowEditModal={setShowEditModal}
               setAssetForEdit={setAssetForEdit}
               setOpenDeleteDialog={setOpenDeleteDialog}
@@ -202,8 +173,8 @@ const AssetTreeNode = ({
   );
 };
 
-// ---------------------------------------- MAIN TREE COMPONENT
 
+// ✅ MAIN TREE COMPONENT
 export const AssetTree = ({
   assets,
   selectedId,
@@ -229,18 +200,20 @@ export const AssetTree = ({
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState<BackendAsset | null>(null);
 
-const handleConfirmDelete = () => {
-  if (!assetToDelete) return;
+  const handleConfirmDelete = () => {
+    if (!assetToDelete) return;
+    onDelete(assetToDelete);
+    toast.success(`✅ "${assetToDelete.name}" deleted successfully`);
+    setOpenDeleteDialog(false);
+  };
 
-  onDelete(assetToDelete); // ✅ remove from UI tree
-  setOpenDeleteDialog(false);
-};
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">Asset Tree</h2>
+
           <Button size="sm" onClick={() => setShowAddRootModal(true)}>
             <Plus className="h-4 w-4" /> Add Root
           </Button>
@@ -253,7 +226,7 @@ const handleConfirmDelete = () => {
         />
       </div>
 
-      {/* Tree */}
+      {/* Tree Display */}
       <div className="flex-1 overflow-auto p-2">
         {assets.length === 0 ? (
           <p className="text-center text-sm text-gray-500">No assets found</p>
@@ -264,13 +237,9 @@ const handleConfirmDelete = () => {
               asset={asset}
               selectedId={selectedId}
               onSelect={onSelect}
-              onAdd={onAdd}
-              onDelete={onDelete}
               searchTerm={searchTerm}
               setShowAddAssetModal={setShowAddAssetModal}
               setAssetForAdd={setAssetForAdd}
-              setShowConfigureModal={() => {}}
-              setAssetForConfig={() => {}}
               setShowEditModal={setShowEditModal}
               setAssetForEdit={setAssetForEdit}
               setOpenDeleteDialog={setOpenDeleteDialog}
@@ -280,12 +249,11 @@ const handleConfirmDelete = () => {
         )}
       </div>
 
-      {/* --- Modals --- */}
-
+      {/* Modals */}
       {showAddRootModal && (
         <Addroot
           onClose={() => setShowAddRootModal(false)}
-          onAdd={(newAsset) => onAdd(newAsset)}
+          onAdd={onAdd}
         />
       )}
 
@@ -293,7 +261,7 @@ const handleConfirmDelete = () => {
         <Addasset
           parentAsset={assetForAdd}
           onClose={() => setShowAddAssetModal(false)}
-          onAdd={(newAsset) => onAdd(newAsset)}
+          onAdd={onAdd}
         />
       )}
 

@@ -11,7 +11,7 @@ import { insertAsset } from "@/api/assetApi";
 interface AddAssetProps {
   parentAsset?: any; // backend: { assetId, name, ... }
   onClose: () => void;
-  onAdd?: (newAsset: any) => void; // <--- new callback to parent
+  onAdd?: () => void;
 }
 
 export default function AddAsset({ parentAsset, onClose, onAdd }: AddAssetProps) {
@@ -66,18 +66,8 @@ export default function AddAsset({ parentAsset, onClose, onAdd }: AddAssetProps)
       toast.success(`Asset "${payload.name}" created successfully!`);
 
       // Notify parent to update AssetTree
-      if (onAdd) {
-        const newAsset = {
-          assetId: response.assetId || Math.random().toString(36).substring(2, 9),
-          name: payload.name,
-          childrens: [],
-          parentId: payload.parentId,
-          level: payload.level,
-          isDeleted: false,
-        };
-        onAdd(newAsset);
-      }
-
+      if (onAdd) onAdd();
+      
       setFormData({ name: "" });
       setTimeout(() => onClose(), 700);
     } catch (err: any) {

@@ -11,7 +11,8 @@ import { insertAsset } from "@/api/assetApi";
 
 interface AddRootProps {
   onClose: () => void;
-  onAdd?: (newAsset: any) => void; // <--- optional callback to parent
+  onAdd?: () => void;
+
 }
 
 export default function AddRoot({ onClose, onAdd }: AddRootProps) {
@@ -56,18 +57,7 @@ export default function AddRoot({ onClose, onAdd }: AddRootProps) {
       console.log("Insert API Response:", response);
 
       // Notify parent to update AssetTree
-      if (onAdd) {
-        // Add backend asset object returned by API or construct one
-        const newAsset = {
-          assetId: response.assetId || Math.random().toString(36).substring(2, 9),
-          name: payload.name,
-          childrens: [],
-          parentId: null,
-          level: 0,
-          isDeleted: false,
-        };
-        onAdd(newAsset);
-      }
+      if (onAdd) onAdd();
 
       setName("");
       setTimeout(() => onClose(), 700);
