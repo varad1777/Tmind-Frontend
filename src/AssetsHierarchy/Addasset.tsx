@@ -3,15 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 import { insertAsset } from "@/api/assetApi";
 
 interface AddAssetProps {
   parentAsset?: any; // backend: { assetId, name, ... }
   onClose: () => void;
-  onAdd?: (newAsset: any) => void; // <--- new callback to parent
+  onAdd?: () => void;
 }
 
 export default function AddAsset({ parentAsset, onClose, onAdd }: AddAssetProps) {
@@ -66,17 +65,7 @@ export default function AddAsset({ parentAsset, onClose, onAdd }: AddAssetProps)
       toast.success(`Asset "${payload.name}" created successfully!`);
 
       // Notify parent to update AssetTree
-      if (onAdd) {
-        const newAsset = {
-          assetId: response.assetId || Math.random().toString(36).substring(2, 9),
-          name: payload.name,
-          childrens: [],
-          parentId: payload.parentId,
-          level: payload.level,
-          isDeleted: false,
-        };
-        onAdd(newAsset);
-      }
+      if (onAdd) onAdd();
 
       setFormData({ name: "" });
       setTimeout(() => onClose(), 700);
@@ -138,7 +127,6 @@ export default function AddAsset({ parentAsset, onClose, onAdd }: AddAssetProps)
           </CardContent>
         </Card>
 
-        <ToastContainer />
       </div>
     </div>
   );
