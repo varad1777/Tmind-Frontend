@@ -115,6 +115,20 @@ const AssetTreeNode = ({
 
         {/* ACTION BUTTONS */}
         <div className="flex gap-1">
+
+          { asset.level != 5 && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setAssetForAdd(asset);
+              setShowAddAssetModal(true);
+            }}
+            className="p-1 rounded hover:bg-gray-200"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+          )}
+
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -126,16 +140,7 @@ const AssetTreeNode = ({
             <Edit className="h-4 w-4" />
           </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setAssetForAdd(asset);
-              setShowAddAssetModal(true);
-            }}
-            className="p-1 rounded hover:bg-gray-200"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
+          
 
           <button
             onClick={(e) => {

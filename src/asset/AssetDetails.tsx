@@ -75,7 +75,7 @@ export default function AssetDetails({
                 </Button>
               )}
 
-              {(selectedAsset.level === 3 || selectedAsset.level === 4) && (
+              {(selectedAsset.level === 4 || selectedAsset.level === 5) && (
                 <Button
                   onClick={onAssignDevice}
                   size="sm"

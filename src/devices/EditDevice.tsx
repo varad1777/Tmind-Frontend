@@ -55,7 +55,7 @@ useEffect(() => {
         const res = await getDeviceById(deviceId);
         console.log("Fetched device:", res);
 
-        
+  
 
         if (res) {
           setDeviceDetails({
@@ -96,6 +96,7 @@ useEffect(() => {
         }
       }
     };
+    
 
     fetchDevice();
   }, [deviceId]);
@@ -192,9 +193,11 @@ const ipOrLocalhostRegex =
 
     setLoading(true);
 
-    const payload = {
-      device: { ...deviceDetails },
-      configuration: {
+    const devicePayload = {
+      name: deviceDetails.name,
+      description: deviceDetails.description,
+      protocol: deviceDetails.protocol,
+      deviceConfiguration: {
         name: formData.configName.trim(),
         pollIntervalMs: Number(formData.pollInterval),
         protocolSettingsJson: JSON.stringify(formData.protocolSettings),
@@ -202,7 +205,7 @@ const ipOrLocalhostRegex =
     };
 
     try {
-      await updateDevice(deviceId, payload);
+      await updateDevice(deviceId, devicePayload);
       toast.success("Device updated successfully!");
       setTimeout(() => navigate("/devices"), 1000);
     } catch (err: any) {
