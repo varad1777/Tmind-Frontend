@@ -8,6 +8,7 @@ import {
   Plus,
   Edit,
   Trash2,
+  Factory
 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -82,7 +83,7 @@ const AssetTreeNode = ({
 
   const assetType = levelToType(asset.level);
   const Icon =
-    assetType === "Department" ? Building2 : assetType === "Line" ? Layers : Wrench;
+    assetType==="Plant" ? Factory: assetType === "Department" ? Building2 : assetType === "Line" ? Layers : Wrench;
 
   return (
     <div>
