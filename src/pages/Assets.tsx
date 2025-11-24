@@ -155,7 +155,7 @@ export default function Assets() {
           </p>
         </div>
 
-        <Button onClick={() => setShowUploadModal(true)}>+ Import Bulk</Button>
+        <Button onClick={() => setShowUploadModal(true)}>Import Bulk</Button>
       </div>
 
       {/* Main Grid */}
