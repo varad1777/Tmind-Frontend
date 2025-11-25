@@ -54,7 +54,7 @@ useEffect(() => {
         const res = await getDeviceById(deviceId);
         console.log("Fetched device:", res);
 
-  
+        
 
         if (res) {
           setDeviceDetails({
@@ -95,7 +95,6 @@ useEffect(() => {
         }
       }
     };
-    
 
     fetchDevice();
   }, [deviceId]);
@@ -192,11 +191,9 @@ const ipOrLocalhostRegex =
 
     setLoading(true);
 
-    const devicePayload = {
-      name: deviceDetails.name,
-      description: deviceDetails.description,
-      protocol: deviceDetails.protocol,
-      deviceConfiguration: {
+    const payload = {
+      device: { ...deviceDetails },
+      configuration: {
         name: formData.configName.trim(),
         pollIntervalMs: Number(formData.pollInterval),
         protocolSettingsJson: JSON.stringify(formData.protocolSettings),
@@ -204,7 +201,7 @@ const ipOrLocalhostRegex =
     };
 
     try {
-      await updateDevice(deviceId, devicePayload);
+      await updateDevice(deviceId, payload);
       toast.success("Device updated successfully!");
       setTimeout(() => navigate("/devices"), 1000);
     } catch (err: any) {
@@ -234,8 +231,8 @@ const ipOrLocalhostRegex =
 
   
   return (
-    <div className="flex justify-center items-center min-h-[85vh] bg-gradient-to-b from-background to-muted/30 text-foreground p-4">
-      <Card className="w-full max-w-2xl shadow-lg border border-border/60 bg-card/90 backdrop-blur-sm">
+    <div className="flex justify-center items-center min-h-[85vh] bg-gradient-to-b from-background to-muted/30 text-foreground p-4 ">
+      <Card className="w-full max-w-2xl shadow-lg border border-border/60 bg-card/90 backdrop-blur-sm ">
         <CardHeader className="flex flex-col items-center space-y-2 pb-2">
           <Settings2 className="h-7 w-7 text-primary" />
           <CardTitle className="text-2xl font-semibold tracking-tight">

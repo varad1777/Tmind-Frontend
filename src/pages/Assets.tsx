@@ -94,6 +94,8 @@ export default function Assets() {
       console.error("Failed to load assets:", err);
       const message = err || "Failed to load assets. Please try again.";
       toast.error(message, { autoClose: 4000 });
+      const message = err || "Failed to load assets. Please try again.";
+      toast.error(message, { autoClose: 4000 });
     } finally {
       setLoading(false);
     }
@@ -171,10 +173,10 @@ export default function Assets() {
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-12 gap-2 mt-6">
+      <div className="grid grid-cols-12 gap-1 mt-6">
         {/* Asset Tree */}
         <div className="col-span-12 lg:col-span-5">
-          <Card className="h-[600px] flex flex-col">
+          <Card className="h-[570px] flex flex-col">
             <CardContent className="p-2 flex-1 overflow-auto">
               {!loading && (
                 <AssetTree
@@ -195,7 +197,7 @@ export default function Assets() {
 
         {/* Asset Details */}
         <div className="col-span-12 lg:col-span-7">
-          <Card className="h-[600px] flex flex-col">
+          <Card className="h-[570px] flex flex-col">
             <CardHeader>
               <CardTitle className="text-lg">Asset Details</CardTitle>
             </CardHeader>

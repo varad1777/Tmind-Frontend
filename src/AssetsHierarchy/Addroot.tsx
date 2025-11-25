@@ -60,9 +60,12 @@ export default function AddRoot({ onClose, onAdd }: AddRootProps) {
 
       setName("");
       setTimeout(() => onClose(), 700);
-    } catch (err) {
-      console.error("Error adding root asset:", err);
-      toast.error("Failed to add root asset. Try again.");
+    } catch (err: any) {
+      console.error("Error creating asset:", err);
+
+      const message = err || "Failed to create asset. Please try again.";
+
+      toast.error(message, { autoClose: 4000 });
     } finally {
       setLoading(false);
     }
@@ -73,7 +76,7 @@ export default function AddRoot({ onClose, onAdd }: AddRootProps) {
       <div className="w-[400px] max-h-[80vh] overflow-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-center">
+            <CardTitle className="text-xl font-semibold text-left">
               Add Root Asset
             </CardTitle>
           </CardHeader>
