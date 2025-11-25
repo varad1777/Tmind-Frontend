@@ -17,6 +17,7 @@ import DeletedDevices from "./devices/DeletedDevices";
 import Profile from "./pages/Profile";
 import AddPortForm from "./pages/AddPortsForm";
 import { TooltipProvider } from "@/components/ui/tooltip"; // from your shadcn tooltip file
+import Map_Device_To_Asset from "./asset/Map-Device-To-Asset";
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/deleted-devices" element={<DeletedDevices />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/map-device-to-asset/:assetid" element={<Map_Device_To_Asset />} />
           </Route>
 
           {/* Redirect unknown routes to login */}
