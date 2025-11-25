@@ -144,7 +144,7 @@ export default function Assets() {
 
   // -------------------- Render --------------------
   return (
-    <div className="p-3">
+    <div className="p-2">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
@@ -160,7 +160,7 @@ export default function Assets() {
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-12 gap-2 mt-6">
+      <div className="grid grid-cols-12 gap-1 mt-6">
         {/* Asset Tree */}
         <div className="col-span-12 lg:col-span-5">
           <Card className="h-[600px] flex flex-col">

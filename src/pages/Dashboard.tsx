@@ -125,18 +125,18 @@ export default function Dashboard() {
           trendUp
         />
         <KPICard
-          title="Active Devices"
-          value={totalDevices.toString()}
-          icon={<Cpu className="h-8 w-8" />}
-          trend={`${deletedDevices} deleted`}
-          trendUp={deletedDevices === 0}
-        />
-        <KPICard
           title="Total Assets"
           value={totalAssets.toString()}
           icon={<Network className="h-8 w-8" />}
           trend="+12 this week"
           trendUp
+        />
+        <KPICard
+          title="Active Devices"
+          value={totalDevices.toString()}
+          icon={<Cpu className="h-8 w-8" />}
+          trend={`${deletedDevices} deleted`}
+          trendUp={deletedDevices === 0}
         />
         <KPICard
           title="Alerts Today"
