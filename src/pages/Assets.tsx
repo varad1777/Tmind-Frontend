@@ -9,6 +9,7 @@ import AssetDetails from "@/asset/AssetDetails";
 import AssignDevice from "@/asset/AssignDevice";
 
 import { getAssetHierarchy } from "@/api/assetApi";
+import { useAuth } from "@/context/AuthContext"; 
 
 import {
   Dialog,
@@ -20,12 +21,13 @@ import {
 } from "@/components/ui/dialog";
 
 import { toast } from "react-toastify";
+import { Spinner } from "@/components/ui/spinner";
 
 // -------------------- Types --------------------
 export type BackendAsset = {
   assetId: string;
   name: string;
-  childrens: BackendAsset[] | null;
+  childrens: BackendAsset[];
   parentId: string | null;
   level: number;
   isDeleted: boolean;
@@ -67,7 +69,6 @@ const addAssetToTree = (
 export default function Assets() {
   const [assets, setAssets] = useState<BackendAsset[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<BackendAsset | null>(null);
-
   const [assignedDevice, setAssignedDevice] = useState<any>(null);
   const [showAssignDevice, setShowAssignDevice] = useState(false);
 
@@ -77,6 +78,7 @@ export default function Assets() {
   const [dragOver, setDragOver] = useState(false);
 
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // -------------------- Load Assets --------------------
   useEffect(() => {
@@ -90,7 +92,8 @@ export default function Assets() {
       setAssets(normalizeAssets(backendData));
     } catch (err) {
       console.error("Failed to load assets:", err);
-      toast.error("Failed to load assets. Please try again.");
+      const message = err || "Failed to load assets. Please try again.";
+      toast.error(message, { autoClose: 4000 });
     } finally {
       setLoading(false);
     }
@@ -141,9 +144,17 @@ export default function Assets() {
     loadAssets();
   };
 
-  // -------------------- Render --------------------
+  const isAdmin = user?.role === "Admin";
+
   return (
-    <div className="p-3">
+    <div className="p-3 relative">
+      {/* Global Loading Overlay */}
+      {loading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70">
+          <Spinner />
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
@@ -154,8 +165,9 @@ export default function Assets() {
             Explore structure of plants, departments, machines & sub-machines.
           </p>
         </div>
-
-        <Button onClick={() => setShowUploadModal(true)}>+ Import Bulk</Button>
+        {isAdmin && (
+          <Button onClick={() => setShowUploadModal(true)}>Import Bulk</Button>
+        )}
       </div>
 
       {/* Main Grid */}
@@ -164,9 +176,7 @@ export default function Assets() {
         <div className="col-span-12 lg:col-span-5">
           <Card className="h-[600px] flex flex-col">
             <CardContent className="p-2 flex-1 overflow-auto">
-              {loading ? (
-                <p className="text-muted-foreground p-2">Loading assets...</p>
-              ) : (
+              {!loading && (
                 <AssetTree
                   assets={assets}
                   selectedId={selectedAsset?.assetId ?? null}
@@ -175,8 +185,8 @@ export default function Assets() {
                     setAssets(prev => removeAssetById(prev, deletedAsset.assetId));
                   }}
                   onAdd={() => {
-                  loadAssets(); // ✅ refresh state from DB
-                }}
+                    loadAssets(); // refresh from backend
+                  }}
                 />
               )}
             </CardContent>
@@ -191,12 +201,14 @@ export default function Assets() {
             </CardHeader>
 
             <CardContent className="p-2 flex-1 overflow-auto">
-              <AssetDetails
-                selectedAsset={selectedAsset}
-                assignedDevice={assignedDevice}
-                onRestore={() => {}}
-                onAssignDevice={onAssignDevice}
-              />
+              {!loading && (
+                <AssetDetails
+                  selectedAsset={selectedAsset}
+                  assignedDevice={assignedDevice}
+                  onRestore={() => {}}
+                  onAssignDevice={onAssignDevice}
+                />
+              )}
             </CardContent>
           </Card>
         </div>
