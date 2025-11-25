@@ -1,6 +1,7 @@
 import React, { useState, type DragEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify"; // import toast notification
 
 export default function UploadDeviceCsv() {
   const [file, setFile] = useState<File | null>(null);
@@ -17,7 +18,7 @@ export default function UploadDeviceCsv() {
       if (droppedFile.type === "text/csv") {
         setFile(droppedFile);
       } else {
-        alert("Please upload a CSV file only.");
+        toast.error("Please upload a CSV file only.");
       }
     }
   };
@@ -29,7 +30,7 @@ export default function UploadDeviceCsv() {
       if (selectedFile.type === "text/csv") {
         setFile(selectedFile);
       } else {
-        alert("Please upload a CSV file only.");
+        toast.error("Please upload a CSV file only.");
       }
     }
   };
@@ -37,12 +38,12 @@ export default function UploadDeviceCsv() {
   // Handle submit (frontend only)
   const handleSubmit = () => {
     if (!file) {
-      alert("Please select a CSV file first.");
+      toast.warning("Please select a CSV file first.");
       return;
     }
 
     console.log("CSV file submitted:", file.name);
-    alert(`CSV file "${file.name}" submitted!`);
+    toast.success(`CSV file "${file.name}" submitted!`);
 
     // Reset and navigate
     setFile(null);

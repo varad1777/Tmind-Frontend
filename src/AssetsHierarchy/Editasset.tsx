@@ -91,7 +91,7 @@ export default function EditAsset({ asset, onClose, onUpdated }: EditAssetProps)
       <div className="w-[400px] max-h-[80vh] overflow-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl text-center font-semibold">
+            <CardTitle className="text-xl text-left font-semibold">
               Edit Asset
             </CardTitle>
           </CardHeader>

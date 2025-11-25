@@ -85,7 +85,7 @@ export default function AddAsset({ parentAsset, onClose, onAdd }: AddAssetProps)
       <div className="w-[400px] max-h-[80vh] overflow-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl text-center font-semibold">
+            <CardTitle className="text-xl text-left font-semibold">
               {parentAsset ? "Add Sub-Asset" : "Add Root Asset"}
             </CardTitle>
           </CardHeader>

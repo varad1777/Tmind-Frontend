@@ -76,7 +76,7 @@ export default function AddRoot({ onClose, onAdd }: AddRootProps) {
       <div className="w-[400px] max-h-[80vh] overflow-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-center">
+            <CardTitle className="text-xl font-semibold text-left">
               Add Root Asset
             </CardTitle>
           </CardHeader>
