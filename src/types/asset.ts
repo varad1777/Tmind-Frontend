@@ -9,7 +9,7 @@
 //   children: Asset[];
 // }
 export interface Asset {
-  id: string;
+  assetId: string;
   name: string;
   level: number;
   parentId?: string | null;

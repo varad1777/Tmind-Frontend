@@ -64,3 +64,8 @@ export const getDeletedDeviced = async () => {
   const response = await api.get(`/devices/deleted`);
   return response.data.data;
 };
+
+export const match_by_regAddress = async (registerAddresses:any) => {
+  const response = await api.post(`/devices/match-by-address`, registerAddresses);
+  return response;
+};

@@ -83,7 +83,41 @@ const AssetTreeNode = ({
 
   const assetType = levelToType(asset.level);
   const Icon =
-    assetType==="Plant" ? Factory: assetType === "Department" ? Building2 : assetType === "Line" ? Layers : Wrench;
+    assetType === "Department" ? Building2 : assetType === "Line" ? Layers : Wrench;
+
+  const actions = [
+    {
+      icon: <Edit className="h-4 w-4" />,
+      name: "Edit",
+      onClick: () => {
+        setAssetForEdit(asset);
+        setShowEditModal(true);
+      },
+    },
+    {
+      icon: <Plus className="h-4 w-4" />,
+      name: "Add Sub-Asset",
+      onClick: () => {
+        setAssetForAdd(asset);
+        setShowAddAssetModal(true);
+      },
+    },
+    {
+      icon: <Trash2 className="h-4 w-4" />,
+      name: "Delete",
+      onClick: () => {
+        setAssetToDelete(asset);
+        setOpenDeleteDialog(true);
+      },
+    },{
+      icon: <Trash2 className="h-4 w-4" />,
+      name: "configure",
+      onClick: () => {
+        setAssetForConfig(asset);
+        setShowConfigureModal(true);
+      },
+    },
+  ];
 
   return (
     <div>

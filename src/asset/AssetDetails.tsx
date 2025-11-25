@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link2 } from "lucide-react";
 import levelToType from "./mapBackendAsset";
+import { useNavigate } from "react-router-dom";
 
 interface AssetDetailsProps {
   selectedAsset: any | null;
@@ -20,6 +21,7 @@ export default function AssetDetails({
 }: AssetDetailsProps) {
   const assetType = selectedAsset ? levelToType(selectedAsset.level) : "";
   const subAssetCount = selectedAsset?.childrens?.length || 0;
+  let navigate = useNavigate();
 
   return (
     <Card className="glass-card">
@@ -77,13 +79,12 @@ export default function AssetDetails({
 
               {(selectedAsset.level === 4 || selectedAsset.level === 5) && (
                 <Button
-                  onClick={onAssignDevice}
+                  onClick={()=>navigate(`/map-device-to-asset/${selectedAsset.assetId}`)}
                   size="sm"
-                  variant={assignedDevice ? "default" : "outline"}
-                  className={assignedDevice ? "bg-green-600 text-white" : ""}
+                  className={"bg-green-600 text-white"}
                 >
                   <Link2 className="h-4 w-4 mr-2" />
-                  {assignedDevice ? "Device Assigned" : "Assign Device"}
+                 Assign Device
                 </Button>
               )}
             </div>
