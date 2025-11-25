@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import {toast} from "react-toastify";
+
 
 import { updateAsset } from "@/api/assetApi";
 
@@ -91,7 +91,7 @@ export default function EditAsset({ asset, onClose, onUpdated }: EditAssetProps)
       <div className="w-[400px] max-h-[80vh] overflow-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl text-center font-semibold">
+            <CardTitle className="text-xl text-left font-semibold">
               Edit Asset
             </CardTitle>
           </CardHeader>
@@ -130,8 +130,6 @@ export default function EditAsset({ asset, onClose, onUpdated }: EditAssetProps)
             </form>
           </CardContent>
         </Card>
-
-        <ToastContainer />
       </div>
     </div>
   );

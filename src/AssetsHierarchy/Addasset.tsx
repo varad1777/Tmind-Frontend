@@ -3,15 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 import { insertAsset } from "@/api/assetApi";
 
 interface AddAssetProps {
   parentAsset?: any; // backend: { assetId, name, ... }
   onClose: () => void;
-  onAdd?: (newAsset: any) => void; // <--- new callback to parent
+  onAdd?: () => void;
 }
 
 export default function AddAsset({ parentAsset, onClose, onAdd }: AddAssetProps) {
@@ -66,27 +65,14 @@ export default function AddAsset({ parentAsset, onClose, onAdd }: AddAssetProps)
       toast.success(`Asset "${payload.name}" created successfully!`);
 
       // Notify parent to update AssetTree
-      if (onAdd) {
-        const newAsset = {
-          assetId: response.assetId || Math.random().toString(36).substring(2, 9),
-          name: payload.name,
-          childrens: [],
-          parentId: payload.parentId,
-          level: payload.level,
-          isDeleted: false,
-        };
-        onAdd(newAsset);
-      }
+      if (onAdd) onAdd();
 
       setFormData({ name: "" });
       setTimeout(() => onClose(), 700);
     } catch (err: any) {
       console.error("Error creating asset:", err);
 
-      const message =
-        err?.response?.data?.error ||
-        err?.response?.data?.message ||
-        "Failed to create asset. Try again.";
+      const message = err || "Failed to create asset. Please try again.";
 
       toast.error(message, { autoClose: 4000 });
     } finally {
@@ -99,7 +85,7 @@ export default function AddAsset({ parentAsset, onClose, onAdd }: AddAssetProps)
       <div className="w-[400px] max-h-[80vh] overflow-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl text-center font-semibold">
+            <CardTitle className="text-xl text-left font-semibold">
               {parentAsset ? "Add Sub-Asset" : "Add Root Asset"}
             </CardTitle>
           </CardHeader>
@@ -138,7 +124,6 @@ export default function AddAsset({ parentAsset, onClose, onAdd }: AddAssetProps)
           </CardContent>
         </Card>
 
-        <ToastContainer />
       </div>
     </div>
   );

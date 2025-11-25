@@ -17,11 +17,13 @@ const menuItems = [
   // { icon: <FileText size={18} />, label: "Reports", path: "/reports" },
   // { icon: <Settings size={18} />, label: "Settings", path: "/settings" },
   { icon: <Trash size={18} />, label: "Deleted Devices", path: "/deleted-devices" },
+  { icon: <Trash size={18} />, label: "Deleted Assets", path: "/deleted-assets" }, // <-- Added this
 ];
+
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col p-4">
+    <aside className="sticky top-0 z-40 w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col p-4">
       
      
       <div className="h-12 flex items-center justify-center border-b border-sidebar-border px-4 mb-6">

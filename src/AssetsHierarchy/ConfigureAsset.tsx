@@ -81,7 +81,9 @@ export default function ConfigureAsset({ asset, onClose }: ConfigureAssetProps) 
       <div className="bg-white rounded-lg shadow-xl p-6 w-[720px] max-w-[95%]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">{asset.name} - Configure</h2>
-          <Button variant="ghost" size="sm" onClick={onClose}><X /></Button>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X />
+          </Button>
         </div>
 
         {/* Show uploaded table image for quick reference */}

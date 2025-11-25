@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { Building2, Cpu, Network, AlertTriangle } from "lucide-react";
 import { getDevices, getDeletedDeviced } from "@/api/deviceApi";
+import { getAssetHierarchy } from "@/api/assetApi";
 import { toast } from "react-toastify";
 
 export default function Dashboard() {
   const [totalDevices, setTotalDevices] = useState(0);
   const [deletedDevices, setDeletedDevices] = useState(0);
+  const [totalAssets, setTotalAssets] = useState(0);
+  const [departmentCount, setDepartmentCount] = useState(0);
+  const [plantCount, setPlantCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,14 +20,53 @@ export default function Dashboard() {
         setLoading(true);
         setError(null);
 
-        // Fetch active devices
+        // Active devices
         const deviceRes = await getDevices(1, 100);
-        const activeDevices = deviceRes.items || [];
-        setTotalDevices(deviceRes.totalCount || activeDevices.length);
+        setTotalDevices(deviceRes.totalCount || deviceRes.items?.length || 0);
 
-        // deleted devices
+        // Deleted devices
         const deletedRes = await getDeletedDeviced();
         setDeletedDevices(deletedRes?.length || 0);
+
+        // Assets
+        const assets = await getAssetHierarchy();
+
+        // Recursive function to count all assets
+        const countAssets = (nodes: any[]): number => {
+          let count = 0;
+          nodes.forEach((node) => {
+            count += 1; // count current node
+            if (node.childrens && node.childrens.length > 0) {
+              count += countAssets(node.childrens);
+            }
+          });
+          return count;
+        };
+
+        setTotalAssets(countAssets(assets || []));
+
+        // Count departments (level 2 assets)
+        const countDepartments = (nodes: any[]): number => {
+          let count = 0;
+          nodes.forEach((node) => {
+            if (node.level === 2) count += 1;
+            if (node.childrens && node.childrens.length > 0) {
+              count += countDepartments(node.childrens);
+            }
+          });
+          return count;
+        };
+        setDepartmentCount(countDepartments(assets || []));
+
+        // Count plants (level 1 assets)
+        const countPlants = (nodes: any[]): number => {
+          let count = 0;
+          nodes.forEach((node) => {
+            if (node.level === 1) count += 1;
+          });
+          return count;
+        };
+        setPlantCount(countPlants(assets || []));
       } catch (err: any) {
         console.error("Error fetching dashboard data:", err);
         setError("Failed to load dashboard data");
@@ -52,10 +95,8 @@ export default function Dashboard() {
     );
   }
 
-  // KPIs 
-  const departmentCount = 2; 
-  const totalAssets = totalDevices + 50; 
-  const alertsToday = Math.floor(totalDevices * 0.05); 
+  // Alerts KPI
+  const alertsToday = Math.floor(totalDevices * 0.05);
 
   return (
     <div className="space-y-6">
@@ -68,7 +109,14 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        <KPICard
+          title="Plants"
+          value={plantCount.toString()}
+          icon={<Building2 className="h-8 w-8" />}
+          trend="+0 this month"
+          trendUp
+        />
         <KPICard
           title="Departments"
           value={departmentCount.toString()}
@@ -77,18 +125,18 @@ export default function Dashboard() {
           trendUp
         />
         <KPICard
-          title="Active Devices"
-          value={totalDevices.toString()}
-          icon={<Cpu className="h-8 w-8" />}
-          trend={`${deletedDevices} deleted`}
-          trendUp={deletedDevices === 0}
-        />
-        <KPICard
           title="Total Assets"
           value={totalAssets.toString()}
           icon={<Network className="h-8 w-8" />}
           trend="+12 this week"
           trendUp
+        />
+        <KPICard
+          title="Active Devices"
+          value={totalDevices.toString()}
+          icon={<Cpu className="h-8 w-8" />}
+          trend={`${deletedDevices} deleted`}
+          trendUp={deletedDevices === 0}
         />
         <KPICard
           title="Alerts Today"

@@ -22,6 +22,11 @@ import Map_Device_To_Asset from "./asset/Map-Device-To-Asset";
 export default function App() {
   return (
     <TooltipProvider>
+         <ToastContainer
+          position="top-right"
+          autoClose={2000}
+          theme="light"
+          />
       <Router>
         <Routes>
 
@@ -48,6 +53,7 @@ export default function App() {
           {/* Redirect unknown routes to login */}
           {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
         </Routes>
+       
       </Router>
     </TooltipProvider>
   );
