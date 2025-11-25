@@ -5,6 +5,7 @@ import { X, Trash2, RefreshCw } from "lucide-react";
 import { type Asset } from "@/types/asset";
 import apiAsset from "@/api/axiosAsset";
 import { toast } from "react-toastify";
+import { getSignalTypes } from "@/api/assetApi";
 
 interface ConfigureAssetProps {
   asset: Asset;
@@ -29,6 +30,16 @@ const SIGNALS = [
   { id: "99bfe26d-1691-441f-aa8f-036aa415b0a8", name: "Vibration", unit: "mm/s", register: 40011 },
 ];
 
+// useEffect(() => {
+//   const loadSignalTypes = async () => {
+//     const result = await getSignalTypes();
+//     console.log(result);
+//   };
+
+//   loadSignalTypes();
+// }, []);
+
+
 type StagedConfig = AssetConfig & {
   status: "unchanged" | "toDelete";
 };
@@ -39,6 +50,19 @@ export default function ConfigureAsset({ asset, onClose }: ConfigureAssetProps) 
   const [configsLoading, setConfigsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(false);
+  const [signalTypes, setSignalTypes] = useState<any[]>([]);
+
+
+ useEffect(() => {
+  const loadSignalTypes = async () => {
+    const result = await getSignalTypes();
+    console.log(result);
+    setSignalTypes(result);
+  };
+
+  loadSignalTypes();
+}, []);
+
 
   useEffect(() => {
     fetchConfigs();
@@ -65,7 +89,7 @@ export default function ConfigureAsset({ asset, onClose }: ConfigureAssetProps) 
     }
   };
 
-  const findSignal = (id?: string) => SIGNALS.find((s) => s.id === id);
+  const findSignal = (id?: string) => signalTypes.find((s) => s.signalTypeID === id);
 
   // active count = existing not marked deleted + staged new
   const activeCount = useMemo(() => {
@@ -209,20 +233,20 @@ export default function ConfigureAsset({ asset, onClose }: ConfigureAssetProps) 
                   </tr>
                 </thead>
                 <tbody>
-                  {SIGNALS.map((s) => {
+                  {signalTypes.map((s) => {
                     // disabled prevents adding a signal that's already active (to avoid duplicates)
                     const disabled =
-                      stagedNewSignals.includes(s.id) ||
-                      stagedConfigs.some((c) => c.signalTypeID === s.id && c.status !== "toDelete") ||
+                      stagedNewSignals.includes(s.signalTypeID) ||
+                     stagedConfigs.some((c) => c.signalTypeID === s.signalTypeID && c.status !== "toDelete") ||
                       activeCount >= 3;
                     return (
-                      <tr key={s.id} className="border-t">
-                        <td className="py-2">{s.name}</td>
-                        <td className="py-2">{s.unit}</td>
-                        <td className="py-2">{s.register}</td>
+                      <tr key={s.signalTypeID} className="border-t">
+                        <td className="py-2">{s.signalName}</td>
+                        <td className="py-2">{s.signalUnit}</td>
+                        <td className="py-2">{s.defaultRegisterAdress}</td>
                         <td className="py-2">
                           <button
-                            onClick={() => addNewSignal(s.id)}
+                            onClick={() => addNewSignal(s.signalTypeID)}
                             className={`px-2 py-1 rounded text-sm border ${disabled ? "opacity-40 cursor-not-allowed" : "hover:bg-slate-100"}`}
                             disabled={disabled}
                           >
