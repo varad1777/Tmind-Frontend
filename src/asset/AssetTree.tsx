@@ -8,7 +8,8 @@ import {
   Plus,
   Edit,
   Trash2,
-  Factory
+  Factory,
+  Cog
 } from "lucide-react";
 
 
@@ -23,6 +24,7 @@ import { useAuth } from "@/context/AuthContext";
 import levelToType from "./mapBackendAsset";
 import { toast } from "react-toastify";
 import ConfigureAsset from "@/AssetsHierarchy/ConfigureAsset";
+import { Spinner } from "@/components/ui/spinner";
 
 
 export interface BackendAsset {
@@ -172,9 +174,9 @@ const AssetTreeNode = ({
                   setAssetForConfig(asset);
                   setShowConfigureModal(true);
                 }}
-                className="p-1 rounded hover:bg-red-200 text-red-600"
+                className="p-1 rounded hover:bg-gray-200"
               >
-                <Trash2 className="h-4 w-4" />
+                <Cog className="h-4 w-4" />
               </button>
             
           </div>
@@ -235,7 +237,7 @@ export const AssetTree = ({ assets, selectedId, onSelect, onAdd, onDelete }: Ass
 
   // Prevent rendering until auth is loaded
   if (loading) {
-    return <div className="h-full flex items-center justify-center">Loading...</div>;
+    return <Spinner />;
   }
 
   // -------------------------

@@ -4,6 +4,7 @@ import { Building2, Cpu, Network, AlertTriangle } from "lucide-react";
 import { getDevices, getDeletedDeviced } from "@/api/deviceApi";
 import { getAssetHierarchy } from "@/api/assetApi";
 import { toast } from "react-toastify";
+import { useAuth } from "@/context/AuthContext"; 
 
 export default function Dashboard() {
   const [totalDevices, setTotalDevices] = useState(0);
@@ -13,6 +14,8 @@ export default function Dashboard() {
   const [plantCount, setPlantCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth(); 
+  const isAdmin = user?.role === "Admin";
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -25,8 +28,10 @@ export default function Dashboard() {
         setTotalDevices(deviceRes.totalCount || deviceRes.items?.length || 0);
 
         // Deleted devices
+        if(isAdmin){
         const deletedRes = await getDeletedDeviced();
         setDeletedDevices(deletedRes?.length || 0);
+        }
 
         // Assets
         const assets = await getAssetHierarchy();
@@ -131,13 +136,21 @@ export default function Dashboard() {
           trend="+12 this week"
           trendUp
         />
+        {isAdmin ?
         <KPICard
           title="Active Devices"
           value={totalDevices.toString()}
           icon={<Cpu className="h-8 w-8" />}
           trend={`${deletedDevices} deleted`}
           trendUp={deletedDevices === 0}
+        />:
+        <KPICard
+          title="Active Devices"
+          value={totalDevices.toString()}
+          icon={<Cpu className="h-8 w-8" />}
         />
+        }
+
         <KPICard
           title="Alerts Today"
           value={alertsToday.toString()}
