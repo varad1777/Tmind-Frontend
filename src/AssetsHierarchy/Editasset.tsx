@@ -69,9 +69,8 @@ export default function EditAsset({ asset, onClose, onUpdated }: EditAssetProps)
 
       toast.success("Asset updated successfully!");
 
-      if (onUpdated) onUpdated();
-
-      setTimeout(() => onClose(), 800);
+      if (onUpdated) onUpdated();  
+      setTimeout(() => onClose(), 700);
     } catch (err: any) {
       console.error("Error updating asset:", err);
 

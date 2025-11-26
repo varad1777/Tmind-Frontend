@@ -341,7 +341,14 @@ export const AssetTree = ({ assets, selectedId, onSelect, onAdd, onDelete }: Ass
         <Addasset parentAsset={assetForAdd} onClose={() => setShowAddAssetModal(false)} onAdd={onAdd} />
       )}
       {showEditModal && assetForEdit && (
-        <Editasset asset={assetForEdit} onClose={() => setShowEditModal(false)} />
+        <Editasset
+        asset={assetForEdit}
+        onClose={() => setShowEditModal(false)}
+        onUpdated={() => {
+        onAdd();           // refresh Asset Tree
+        setShowEditModal(false);
+        }}
+        />
       )}
       <DeleteAsset
         asset={assetToDelete}
