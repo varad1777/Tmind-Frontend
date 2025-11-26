@@ -119,14 +119,14 @@ export default function Dashboard() {
           title="Plants"
           value={plantCount.toString()}
           icon={<Building2 className="h-8 w-8" />}
-          trend="+0 this month"
+          trend="+0 this year"
           trendUp
         />
         <KPICard
           title="Departments"
           value={departmentCount.toString()}
           icon={<Building2 className="h-8 w-8" />}
-          trend="+2 this month"
+          trend="+1 this month"
           trendUp
         />
         <KPICard

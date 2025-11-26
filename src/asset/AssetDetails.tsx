@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link2 } from "lucide-react";
 import levelToType from "./mapBackendAsset";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 interface AssetDetailsProps {
   selectedAsset: any | null;
@@ -21,6 +22,8 @@ export default function AssetDetails({
 }: AssetDetailsProps) {
   const assetType = selectedAsset ? levelToType(selectedAsset.level) : "";
   const subAssetCount = selectedAsset?.childrens?.length || 0;
+  const {user} = useAuth();
+  const isAdmin = user?.role === "Admin";
   let navigate = useNavigate();
 
   return (
@@ -77,7 +80,7 @@ export default function AssetDetails({
                 </Button>
               )}
 
-              {(selectedAsset.level === 4 || selectedAsset.level === 5) && (
+              {isAdmin && (selectedAsset.level === 4 || selectedAsset.level === 5) && (
                 <Button
                   onClick={()=>navigate(`/map-device-to-asset/${selectedAsset.assetId}`)}
                   size="sm"
