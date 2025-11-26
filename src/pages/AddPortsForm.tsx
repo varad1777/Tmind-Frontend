@@ -176,10 +176,13 @@ export default function ModbusPortManager() {
 
     // fallback signals if backend doesn't provide them:
     setSignals([
-      { id: 1, name: "Voltage" },
-      { id: 2, name: "Current" },
-      { id: 3, name: "Temperature" },
-      { id: 4, name: "Pressure" }
+      { id: 1, name: "Temperature" },
+      { id: 3, name: "Pressure" },
+      { id: 5, name: "Voltage" },
+      { id: 7, name: "Current" },
+      { id: 9, name: "Flow"},
+      { id:11, name: "Vibration"},
+      { id:13 ,name: "RPM"} 
     ]);
   }, [deviceId]);
 

@@ -86,7 +86,7 @@ export default function MapDeviceToAsset() {
   const [existingMappings, setExistingMappings] = useState<ExistingMapping[]>([]);
 
   // UI: when true, only show devices that have at least one available (not-fully-mapped) slave
-  const [showOnlyAvailableDevices, setShowOnlyAvailableDevices] = useState(false);
+  const [showOnlyAvailableDevices, setShowOnlyAvailableDevices] = useState(true);
 
   useEffect(() => {
     if (!assetid) return;
@@ -208,7 +208,7 @@ export default function MapDeviceToAsset() {
         <div>
           <h1 className="text-2xl font-bold">Asset Mapper</h1>
           <p className="text-sm text-slate-600 mt-1">
-            Map assets to device slaves/ports for asset <span className="font-mono">{assetid}</span>
+            Map assets to device slaves for asset
           </p>
         </div>
 
