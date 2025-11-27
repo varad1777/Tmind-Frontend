@@ -85,11 +85,14 @@ export default function Dashboard() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-muted-foreground">Loading dashboard data...</p>
-      </div>
-    );
+   return (
+  <div className="flex items-center justify-center min-h-[60vh] bg-blue-50 rounded-xl">
+    <p className="text-blue-500 font-medium animate-pulse">
+      Loading dashboard data...
+    </p>
+  </div>
+);
+
   }
 
   if (error) {
@@ -104,61 +107,74 @@ export default function Dashboard() {
   const alertsToday = Math.floor(totalDevices * 0.05);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard Overview</h1>
-        <p className="text-muted-foreground">
-          Real-time monitoring of manufacturing assets and devices
-        </p>
-      </div>
+   <div className="relative h-screen">
+  {/* Background Image */}
+  <img
+    src="https://www.purppledesigns.com/wp-content/uploads/2023/11/download-4.png"   // <-- change path
+    alt="bg"
+    className="absolute inset-0 mx-auto -top-12  w-[80%] h-full object-cover opacity-10 pointer-events-none"
+  />
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-        <KPICard
-          title="Plants"
-          value={plantCount.toString()}
-          icon={<Building2 className="h-8 w-8" />}
-          trend="+0 this year"
-          trendUp
-        />
-        <KPICard
-          title="Departments"
-          value={departmentCount.toString()}
-          icon={<Building2 className="h-8 w-8" />}
-          trend="+1 this month"
-          trendUp
-        />
-        <KPICard
-          title="Total Assets"
-          value={totalAssets.toString()}
-          icon={<Network className="h-8 w-8" />}
-          trend="+12 this week"
-          trendUp
-        />
-        {isAdmin ?
+  {/* Content */}
+  <div className="relative z-10 space-y-6">
+    {/* Header */}
+    <div>
+      <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard Overview</h1>
+      <p className="text-muted-foreground">
+        Real-time monitoring of manufacturing assets and devices
+      </p>
+    </div>
+
+    {/* KPI Cards */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <KPICard
+        title="Plants"
+        value={plantCount.toString()}
+        icon={<Building2 className="h-8 w-8" />}
+        trend="+0 this year"
+        trendUp
+      />
+      <KPICard
+        title="Departments"
+        value={departmentCount.toString()}
+        icon={<Building2 className="h-8 w-8" />}
+        trend="+1 this month"
+        trendUp
+      />
+      <KPICard
+        title="Total Assets"
+        value={totalAssets.toString()}
+        icon={<Network className="h-8 w-8" />}
+        trend="+12 this week"
+        trendUp
+      />
+
+      {isAdmin ? (
         <KPICard
           title="Active Devices"
           value={totalDevices.toString()}
           icon={<Cpu className="h-8 w-8" />}
           trend={`${deletedDevices} deleted`}
           trendUp={deletedDevices === 0}
-        />:
+        />
+      ) : (
         <KPICard
           title="Active Devices"
           value={totalDevices.toString()}
           icon={<Cpu className="h-8 w-8" />}
         />
-        }
+      )}
 
-        <KPICard
-          title="Alerts Today"
-          value={alertsToday.toString()}
-          icon={<AlertTriangle className="h-8 w-8" />}
-          trend="-3 from yesterday"
-          trendUp={false}
-        />
-      </div>
+      <KPICard
+        title="Alerts Today"
+        value={alertsToday.toString()}
+        icon={<AlertTriangle className="h-8 w-8" />}
+        trend="-3 from yesterday"
+        trendUp={false}
+      />
     </div>
+  </div>
+</div>
+
   );
 }

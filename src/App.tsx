@@ -1,6 +1,6 @@
+// App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import DashboardLayout from "./layouts/DashboardLayout";
-
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Assets from "./pages/Assets";
@@ -16,29 +16,43 @@ import Settings from "./pages/Settings";
 import DeletedDevices from "./devices/DeletedDevices";
 import Profile from "./pages/Profile";
 import AddPortForm from "./pages/AddPortsForm";
-import { TooltipProvider } from "@/components/ui/tooltip"; // from your shadcn tooltip file
+import { TooltipProvider } from "@/components/ui/tooltip";
 import Map_Device_To_Asset from "./asset/Map-Device-To-Asset";
 import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css"; 
+import "react-toastify/dist/ReactToastify.css";
 import DeletedAsset from "./AssetsHierarchy/DeletedAssets";
+import { useEffect, useState } from "react";
+import PageLoader from "./components/Loader";
 
 export default function App() {
+  const [showLoader, setShowLoader] = useState(true);
+
+  useEffect(() => {
+    const handleLoad = () => {
+      setTimeout(() => setShowLoader(false), 800);
+    };
+
+    // If the load event already fired before effect mounted, hide loader immediately
+    if (document.readyState === "complete") {
+      handleLoad();
+    } else {
+      window.addEventListener("load", handleLoad);
+      return () => window.removeEventListener("load", handleLoad);
+    }
+  }, []);
+
   return (
     <TooltipProvider>
-         <ToastContainer
-          position="top-right"
-          autoClose={2000}
-          theme="light"
-          />
+      <ToastContainer position="top-right" autoClose={2000} theme="light" />
+      <PageLoader isVisible={showLoader} /> {/* <- mounted at app root so it shows on any full-page load */}
       <Router>
         <Routes>
-
           <Route path="/" element={<Login />} />
 
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/assets" element={<Assets />} />
-            <Route path="/deleted-assets" element={<DeletedAsset/>} />
+            <Route path="/deleted-assets" element={<DeletedAsset />} />
             <Route path="/devices" element={<Devices />} />
             <Route path="/devices/add" element={<AddDeviceForm />} />
             <Route path="/devices/edit/:deviceId" element={<EditDeviceForm />} />
@@ -54,10 +68,8 @@ export default function App() {
             <Route path="/map-device-to-asset/:assetid" element={<Map_Device_To_Asset />} />
           </Route>
 
-          {/* Redirect unknown routes to login */}
           {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
         </Routes>
-       
       </Router>
     </TooltipProvider>
   );
