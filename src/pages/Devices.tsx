@@ -276,7 +276,7 @@ export default function Devices() {
                         onClick={() => navigate(`/devices/ports/${d.deviceId}`)}
                         className="flex items-center gap-1"
                       >
-                        <HdmiPort className="h-4 w-4" /> Ports
+                        <HdmiPort className="h-4 w-4" /> Slave
                       </Button>
                       {d.deviceConfiguration && (
                       <Button

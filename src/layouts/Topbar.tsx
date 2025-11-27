@@ -80,7 +80,7 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
 
       
       <div className="flex items-center gap-3">
-        <ThemeToggle />
+        {/* <ThemeToggle /> */}
 
         
         {user || isLoggedInFromState ? (
