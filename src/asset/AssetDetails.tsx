@@ -6,9 +6,11 @@ import { Link2, Unplug, Activity } from "lucide-react";
 import levelToType from "./mapBackendAsset";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getSignalOnAsset } from "@/api/assetApi";
-import {getDeviceById} from "@/api/deviceApi"
+import { getDeviceById } from "@/api/deviceApi";
+import axios from "axios";
+import { toast } from "sonner";
 
 interface AssetDetailsProps {
   selectedAsset: any | null;
@@ -42,47 +44,23 @@ export default function AssetDetails({
   let navigate = useNavigate();
   const [assetConfig, setAssetConfig] = useState<AssetConfig[] | null>(null);
   const [deviceDetails, setDeviceDetails] = useState<any | null>(null);
-
   const [loading, setLoading] = useState(false);
+  const [detaching, setDetaching] = useState(false);
+  
+  // Use ref to store interval ID
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Polling interval in milliseconds (e.g., 5000 = 5 seconds)
+  const POLLING_INTERVAL = 5000;
 
-  useEffect(() => {
-    if (!selectedAsset?.assetId) {
-      setAssetConfig(null);
-      return;
-    }
-
-    const fetchSignalConfig = async () => {
-      try {
-        setLoading(true);
-        console.log("🔄 Fetching signals for asset:", selectedAsset.assetId);
-        const data = await getSignalOnAsset(selectedAsset.assetId);
-        setAssetConfig(data);
-      } catch (error) {
-        console.error("❌ Failed to fetch signal config", error);
-        setAssetConfig(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSignalConfig();
-  }, [selectedAsset]);
-
-  useEffect(() => {
-  if (!selectedAsset?.assetId) {
-    setAssetConfig(null);
-    setDeviceDetails(null);
-    return;
-  }
-
-  const fetchSignalAndDevice = async () => {
+  // Function to fetch data
+  const fetchSignalAndDevice = async (assetId: string) => {
     try {
-      setLoading(true);
-      const data = await getSignalOnAsset(selectedAsset.assetId); // mapping table data
+      const data = await getSignalOnAsset(assetId);
       setAssetConfig(data);
 
       if (data && data.length > 0) {
-        const deviceId = data[0].deviceId;     // first item deviceId
+        const deviceId = data[0].deviceId;
         const device = await getDeviceById(deviceId);
         setDeviceDetails(device);
       } else {
@@ -92,25 +70,82 @@ export default function AssetDetails({
       console.error("Error fetching data", err);
       setDeviceDetails(null);
       setAssetConfig(null);
-    } finally {
-      setLoading(false);
     }
   };
 
-  fetchSignalAndDevice();
-}, [selectedAsset]);
+  // Main effect for polling
+  useEffect(() => {
+    // Clear any existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
 
+    if (!selectedAsset?.assetId) {
+      setAssetConfig(null);
+      setDeviceDetails(null);
+      return;
+    }
+
+    // Initial fetch with loading state
+    const initialFetch = async () => {
+      setLoading(true);
+      await fetchSignalAndDevice(selectedAsset.assetId);
+      setLoading(false);
+    };
+
+    initialFetch();
+
+    // Set up polling interval
+    intervalRef.current = setInterval(() => {
+      console.log("🔄 Polling data for asset:", selectedAsset.assetId);
+      fetchSignalAndDevice(selectedAsset.assetId);
+    }, POLLING_INTERVAL);
+
+    // Cleanup function
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [selectedAsset?.assetId]); // Re-run when selectedAsset changes
+
+  const handleDetachDevice = async () => {
+    if (!selectedAsset?.assetId) return;
+
+    try {
+      setDetaching(true);
+
+      // Call the DELETE endpoint
+      await axios.delete(
+        `https://localhost:7208/api/Mapping/${selectedAsset.assetId}`
+      );
+
+      // Success - reset states
+      toast.success("Device detached successfully!");
+      setAssetConfig(null);
+      setDeviceDetails(null);
+
+      // Immediately fetch fresh data
+      await fetchSignalAndDevice(selectedAsset.assetId);
+    } catch (error) {
+      console.error("Failed to detach device:", error);
+      toast.error("Failed to detach device. Please try again.");
+    } finally {
+      setDetaching(false);
+    }
+  };
 
   // Check if device is assigned (assetConfig has data)
   const hasDeviceAssigned = assetConfig && assetConfig.length > 0;
-  
+
   // Check if user can see device buttons
   const canShowDeviceButton =
     isAdmin &&
     (selectedAsset?.level === 3 ||
       selectedAsset?.level === 4 ||
       selectedAsset?.level === 5);
-console.log(deviceDetails)
 
   return (
     <Card className="glass-card">
@@ -119,6 +154,11 @@ console.log(deviceDetails)
           <div>
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               {selectedAsset?.name || "No Asset Selected"}
+              {selectedAsset && (
+                <Badge variant="outline" className="text-xs font-normal">
+                  Live
+                </Badge>
+              )}
             </CardTitle>
 
             {selectedAsset && (
@@ -155,18 +195,22 @@ console.log(deviceDetails)
                 <p className="font-medium">{selectedAsset.level}</p>
               </div>
             </div>
-              
-              {deviceDetails && (
-  <div className="mt-4 p-4 border rounded-lg bg-green-50">
-    <h3 className="font-semibold text-green-900 mb-2 flex items-center gap-2">
-      <Link2 className="h-4 w-4" /> Connected Device
-    </h3>
 
-    <div className="space-y-1 text-sm">
-      <p><strong>Name:</strong> {deviceDetails.name}</p>
-    </div>
-  </div>
-)}
+            {/* CONNECTED DEVICE INFO */}
+            {deviceDetails && (
+              <div className="mt-4 p-4 border rounded-lg bg-green-50 dark:bg-green-950">
+                <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2 flex items-center gap-2">
+                  <Link2 className="h-4 w-4" /> Connected Device
+                </h3>
+
+                <div className="space-y-1 text-sm">
+                  <p>
+                    <strong>Name:</strong> {deviceDetails.name}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* SIGNAL CONFIGURATION - Only show if data exists */}
             {loading ? (
               <div className="p-4 text-center text-muted-foreground text-sm">
@@ -222,11 +266,13 @@ console.log(deviceDetails)
                 (hasDeviceAssigned ? (
                   // Show "Detach Device" if assetConfig has data
                   <Button
+                    onClick={handleDetachDevice}
+                    disabled={detaching}
                     size="sm"
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    variant="destructive"
                   >
-                    <Link2 className="h-4 w-4 mr-2" />
-                    Detach Device
+                    <Unplug className="h-4 w-4 mr-2" />
+                    {detaching ? "Detaching..." : "Detach Device"}
                   </Button>
                 ) : (
                   // Show "Assign Device" if assetConfig is empty
