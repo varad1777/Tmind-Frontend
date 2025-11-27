@@ -238,7 +238,7 @@ export default function MapDeviceToAsset() {
         </div>
       </div>
 
-      {loading && (
+      {/* {loading && (
         <Card>
           <CardContent>Loading data…</CardContent>
         </Card>
@@ -248,7 +248,7 @@ export default function MapDeviceToAsset() {
         <Card>
           <CardContent className="text-red-600">{error}</CardContent>
         </Card>
-      )}
+      )} */}
 
       <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
         <div className="grid lg:grid-cols-3 gap-6">
