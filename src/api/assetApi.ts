@@ -79,7 +79,7 @@ export const deleteAsset = async (assetId: string) => {
     const res = await apiAsset.delete(`/AssetHierarchy/DeleteAsset/${assetId}`);
     return res.data;
   } catch (err: any) {
-    throw err.response?.data || err.message || `Failed to delete asset ${assetId}`;
+    throw err.response?.data?.message || err.response?.data || `Failed to delete asset ${assetId}`;
   }
 };
 

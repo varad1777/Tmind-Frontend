@@ -29,8 +29,9 @@ export default function DeleteAsset({ asset, open, onClose, onDeleted }: DeleteA
 
       onClose();
     } catch (err: any) {
+      console.log(err)
       toast.error(
-        err?.response?.data?.message ||
+        err?.response?.data?.message || err.response?.data || err ||
         "Failed to delete asset. Try again."
       );
     }
