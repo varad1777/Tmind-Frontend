@@ -17,7 +17,6 @@ export default function Sidebar() {
     { icon: <Home size={18} />, label: "Dashboard", path: "/dashboard" },
     { icon: <Network size={18} />, label: "Assets", path: "/assets" },
     { icon: <Cpu size={18} />, label: "Devices", path: "/devices" },
-    { icon: <Activity size={18} />, label: "Signals", path: "/signals" },
 
     // ADMIN ONLY
     ...(isAdmin

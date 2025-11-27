@@ -528,15 +528,22 @@ export default function ModbusPortManager() {
 
                       {/* Display Address (computed) */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-slate-700">Display Address (computed)</Label>
-                        <Input
-                          type="number"
-                          value={registerForm.registerAddress}
-                          onChange={(e) => updateRegisterForm("registerAddress", Number(e.target.value))}
-                          className="rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 font-mono"
-                        />
-                        <p className="text-xs text-slate-400 mt-1">This is the 5-digit Modbus style address (e.g., 40001). You can edit directly if needed.</p>
-                      </div>
+  <Label className="text-sm font-medium text-slate-700">
+    Display Address (computed)
+  </Label>
+
+  <Input
+    type="number"
+    value={registerForm.registerAddress}
+    readOnly
+    className="rounded-xl border-slate-200 bg-slate-100 cursor-not-allowed font-mono"
+  />
+
+  <p className="text-xs text-slate-400 mt-1">
+    This is the 5-digit Modbus style address (e.g., 40001). This value is computed and cannot be edited.
+  </p>
+</div>
+
 
                       {/* Length */}
                       <div className="space-y-2">

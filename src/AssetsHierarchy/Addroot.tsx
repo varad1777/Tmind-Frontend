@@ -1,71 +1,63 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-toastify";
-
-// Backend API
 import { insertAsset } from "@/api/assetApi";
 
 interface AddRootProps {
   onClose: () => void;
   onAdd?: () => void;
-
 }
 
 export default function AddRoot({ onClose, onAdd }: AddRootProps) {
   const [name, setName] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isValid, setIsValid] = useState(false);
 
   const validateName = (value: string) => {
     const trimmed = value.trim();
     const regex = /^[A-Za-z][A-Za-z0-9_\- ]{2,99}$/;
 
     if (!trimmed) {
-      toast.error("Asset name is required.");
+      setErrorMsg("Asset name is required.");
       return false;
     }
     if (!regex.test(trimmed)) {
-      toast.error(
-        "Asset name must start with a letter, 3–100 chars, and may include letters, numbers, spaces, underscores, or hyphens."
+      setErrorMsg(
+        "Must start with a letter, 3–100 chars, allowed: letters, numbers, space, _ , -"
       );
       return false;
     }
+
+    setErrorMsg("");
     return true;
   };
 
+  useEffect(() => {
+    setIsValid(validateName(name));
+  }, [name]);
+
   const handleAdd = async () => {
-    if (!validateName(name)) return;
+    if (!isValid) return;
 
     setLoading(true);
-
     try {
       const payload = {
-        parentId: null, // root has no parent
+        parentId: null,
         name: name.trim(),
-        level: 0, // root level always 0
+        level: 0,
       };
 
-      console.log("API Payload:", payload);
-
-      // Call backend API
       const response = await insertAsset(payload);
-
       toast.success(`Root asset "${payload.name}" added successfully!`);
-      console.log("Insert API Response:", response);
 
-      // Notify parent to update AssetTree
       if (onAdd) onAdd();
-
-      setName("");
       setTimeout(() => onClose(), 700);
     } catch (err: any) {
-      console.error("Error creating asset:", err);
-
-      const message = err || "Failed to create asset. Please try again.";
-
-      toast.error(message, { autoClose: 4000 });
+      toast.error(err || "Failed to create asset.");
     } finally {
       setLoading(false);
     }
@@ -91,8 +83,12 @@ export default function AddRoot({ onClose, onAdd }: AddRootProps) {
                   placeholder="Enter root asset name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  required
                 />
+
+                {/* 🔥 LIVE VALIDATION MESSAGE */}
+                {errorMsg && (
+                  <p className="text-red-500 text-sm mt-1">{errorMsg}</p>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
@@ -100,13 +96,12 @@ export default function AddRoot({ onClose, onAdd }: AddRootProps) {
                   Cancel
                 </Button>
 
-                <Button onClick={handleAdd} disabled={loading}>
+                <Button onClick={handleAdd} disabled={!isValid || loading}>
                   {loading ? "Adding..." : "Add"}
                 </Button>
               </div>
             </div>
           </CardContent>
-
         </Card>
       </div>
     </div>
