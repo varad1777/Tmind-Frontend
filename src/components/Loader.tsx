@@ -6,7 +6,7 @@ type PageLoaderProps = {
 };
 
 const PageLoader: React.FC<PageLoaderProps> = ({ isVisible }) => {
-  const text = "TMind";
+  const text = "TMind.co.in";
 
   return (
     <div

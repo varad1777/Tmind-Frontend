@@ -85,11 +85,14 @@ export default function Dashboard() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-muted-foreground">Loading dashboard data...</p>
-      </div>
-    );
+   return (
+  <div className="flex items-center justify-center min-h-[60vh] bg-blue-50 rounded-xl">
+    <p className="text-blue-500 font-medium animate-pulse">
+      Loading dashboard data...
+    </p>
+  </div>
+);
+
   }
 
   if (error) {
