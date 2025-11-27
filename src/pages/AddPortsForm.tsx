@@ -559,6 +559,7 @@ export default function ModbusPortManager() {
                             <SelectItem value="rpm">rpm (RPM)</SelectItem>
                             <SelectItem value="rpm">kPa</SelectItem>
                             <SelectItem value="rpm">mm/s</SelectItem>
+                             <SelectItem value="rpm">L/min</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
