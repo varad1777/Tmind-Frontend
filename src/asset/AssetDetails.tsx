@@ -80,7 +80,7 @@ export default function AssetDetails({
                 </Button>
               )}
 
-              {isAdmin && (selectedAsset.level === 4 || selectedAsset.level === 5) && (
+              {isAdmin && (selectedAsset.level === 3 || selectedAsset.level === 4 || selectedAsset.level === 5) && (
                 <Button
                   onClick={()=>navigate(`/map-device-to-asset/${selectedAsset.assetId}`)}
                   size="sm"

@@ -3,57 +3,50 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {toast} from "react-toastify";
-
-
 import { updateAsset } from "@/api/assetApi";
 
 interface EditAssetProps {
-  asset: any;      
+  asset: any;
   onClose: () => void;
   onUpdated?: () => void;
 }
 
 export default function EditAsset({ asset, onClose, onUpdated }: EditAssetProps) {
   const [formData, setFormData] = useState({ name: "" });
+  const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // load existing asset
   useEffect(() => {
     if (asset) {
       setFormData({ name: asset.name || "" });
     }
   }, [asset]);
 
-  // validate
-  const validateForm = () => {
-    const trimmed = formData.name.trim();
+  const validate = (value: string) => {
+    const trimmed = value.trim();
     const regex = /^[A-Za-z][A-Za-z0-9_\- ]{2,99}$/;
 
-    if (!trimmed) {
-      toast.error("Asset Name is required.");
-      return false;
-    }
+    if (!trimmed) return "Asset Name is required.";
+    if (!regex.test(trimmed))
+      return "Name must start with a letter, 3–100 chars allowed (letters, numbers, space, _ , -).";
 
-    if (!regex.test(trimmed)) {
-      toast.error(
-        "Asset Name must start with a letter, be 3–100 chars, and may contain letters, numbers, spaces, underscores, or hyphens."
-      );
-      return false;
-    }
-
-    return true;
+    return "";
   };
 
-  // input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const val = e.target.value;
+    setFormData({ name: val });
+    setErrorMsg(validate(val)); // inline live validation
   };
 
-  // submit update
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    const check = validate(formData.name);
+
+    if (check !== "") {
+      setErrorMsg(check);
+      return;
+    }
 
     setLoading(true);
 
@@ -63,23 +56,17 @@ export default function EditAsset({ asset, onClose, onUpdated }: EditAssetProps)
         newName: formData.name.trim(),
       };
 
-      console.log("Update Asset payload:", payload);
-
       await updateAsset(payload);
 
-      toast.success("Asset updated successfully!");
-
-      if (onUpdated) onUpdated();  
-      setTimeout(() => onClose(), 700);
+      if (onUpdated) onUpdated();
+      setTimeout(() => onClose(), 400);
     } catch (err: any) {
-      console.error("Error updating asset:", err);
-
       const message =
         err?.response?.data?.error ||
         err?.response?.data?.message ||
         "Failed to update Asset. Try again.";
 
-      toast.error(message, { autoClose: 4000 });
+      setErrorMsg(message);
     } finally {
       setLoading(false);
     }
@@ -98,6 +85,11 @@ export default function EditAsset({ asset, onClose, onUpdated }: EditAssetProps)
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
 
+              {/* Top Error */}
+              {errorMsg && (
+                <p className="text-red-500 text-sm font-medium">{errorMsg}</p>
+              )}
+
               {/* Name */}
               <div className="grid gap-2">
                 <Label>Asset Name *</Label>
@@ -105,6 +97,7 @@ export default function EditAsset({ asset, onClose, onUpdated }: EditAssetProps)
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
+                  className={errorMsg ? "border-red-500" : ""}
                   placeholder="Enter new name"
                 />
               </div>
@@ -122,7 +115,7 @@ export default function EditAsset({ asset, onClose, onUpdated }: EditAssetProps)
                   Cancel
                 </Button>
 
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" disabled={loading || errorMsg !== ""}>
                   {loading ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
