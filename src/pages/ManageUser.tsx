@@ -26,6 +26,36 @@ export default function UserManagement() {
   const { user } = useAuth();
   const isAdmin = user?.role === "Admin";
 
+  // --------------------------------------------
+  // ✅ CSV DOWNLOAD FUNCTION
+  // --------------------------------------------
+  const downloadCSV = (jsonData: any[], filename = "users.csv") => {
+    if (!jsonData || jsonData.length === 0) {
+      toast.error("No user data available to download!");
+      return;
+    }
+
+    const headers = Object.keys(jsonData[0]);
+    const csvRows: string[] = [];
+
+    csvRows.push(headers.join(","));
+
+    jsonData.forEach((item) => {
+      const values = headers.map((header) => `"${item[header] ?? ""}"`);
+      csvRows.push(values.join(","));
+    });
+
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+  };
+
   // Fetch all users from backend
   useEffect(() => {
     const fetchUsers = async () => {
@@ -46,27 +76,26 @@ export default function UserManagement() {
   }, []);
 
   // Update user role through backend
-const updateRole = async (user: User, newRole: string) => {
+  const updateRole = async (user: User, newRole: string) => {
     try {
-        const updatedPayload = {
+      const updatedPayload = {
         username: user.username,
         email: user.email,
         role: newRole,
-        };
+      };
 
-        await updateUser(user.userId, updatedPayload);
+      await updateUser(user.userId, updatedPayload);
 
-        setUsers((prev) =>
+      setUsers((prev) =>
         prev.map((u) => (u.userId === user.userId ? { ...u, role: newRole } : u))
-        );
+      );
 
-        toast.success("User role updated!");
+      toast.success("User role updated!");
     } catch (err) {
-        console.error("Error updating user:", err);
-        toast.error("Failed to update user role.");
+      console.error("Error updating user:", err);
+      toast.error("Failed to update user role.");
     }
-    };
-
+  };
 
   // Delete user (backend)
   const handleDeleteUser = async (id: number) => {
@@ -96,7 +125,7 @@ const updateRole = async (user: User, newRole: string) => {
         <p className="text-muted-foreground">Manage application users</p>
       </div>
 
-      {/* Search */}
+      {/* Search + CSV Download */}
       <div className="flex items-center gap-3">
         <div className="relative w-full sm:w-1/3">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -108,6 +137,24 @@ const updateRole = async (user: User, newRole: string) => {
             className="w-full pl-9 pr-4 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
         </div>
+
+        {/* Only Admin can download */}
+        {isAdmin && (
+          <Button
+            onClick={() =>
+              downloadCSV(
+                filteredUsers.map((u) => ({
+                  username: u.username,
+                  email: u.email,
+                  role: u.role,
+                })),
+                "users.csv"
+              )
+            }
+          >
+            Download CSV
+          </Button>
+        )}
       </div>
 
       {/* Loading */}
@@ -149,8 +196,8 @@ const updateRole = async (user: User, newRole: string) => {
                           value={u.role}
                           onChange={(e) =>
                             updateRole(u, e.target.value)
-                            }
-                        className="border border-border rounded-md bg-background px-2 py-1"
+                          }
+                          className="border border-border rounded-md bg-background px-2 py-1"
                         >
                           <option>User</option>
                           <option>Engineer</option>
@@ -168,9 +215,9 @@ const updateRole = async (user: User, newRole: string) => {
                           variant="destructive"
                           size="sm"
                           onClick={() => {
-                          setSelectedUser(u);
-                          setShowDeleteDialog(true);
-                        }}
+                            setSelectedUser(u);
+                            setShowDeleteDialog(true);
+                          }}
                           className="flex items-center gap-1"
                         >
                           <Trash2 className="h-4 w-4" /> Delete
@@ -190,15 +237,16 @@ const updateRole = async (user: User, newRole: string) => {
           </table>
         </div>
       )}
+
       {showDeleteDialog && selectedUser && (
-      <DeleteUserDialog
-        open={showDeleteDialog}
-        onClose={() => setShowDeleteDialog(false)}
-        user={selectedUser}
-        onDeleted={(id) =>
-          setUsers((prev) => prev.filter((u) => u.userId !== id))
-        }
-      />
+        <DeleteUserDialog
+          open={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+          user={selectedUser}
+          onDeleted={(id) =>
+            setUsers((prev) => prev.filter((u) => u.userId !== id))
+          }
+        />
       )}
     </div>
   );
