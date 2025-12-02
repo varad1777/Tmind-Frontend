@@ -263,17 +263,29 @@ export default function AssetDetails({
 
               {/* Conditional Button Logic */}
               {canShowDeviceButton &&
-                (hasDeviceAssigned ? (
-                  // Show "Detach Device" if assetConfig has data
-                  <Button
+                (false ? (
+                  // // Show "Detach Device" if assetConfig has data
+                  // <Button
+                  //   onClick={handleDetachDevice}
+                  //   disabled={detaching}
+                  //   size="sm"
+                  //   variant="destructive"
+                  // >
+                  //   <Unplug className="h-4 w-4 mr-2" />
+                  //   {detaching ? "Detaching..." : "Detach Device"}
+                  // </Button>
+
+
+                     <Button
                     onClick={handleDetachDevice}
                     disabled={detaching}
                     size="sm"
-                    variant="destructive"
+                    className="bg-green-600 hover:bg-green-700 text-white"
                   >
-                    <Unplug className="h-4 w-4 mr-2" />
-                    {detaching ? "Detaching..." : "Detach Device"}
+                    <Link2 className="h-4 w-4 mr-2" />
+                    Detach Device
                   </Button>
+                  
                 ) : (
                   // Show "Assign Device" if assetConfig is empty
                   <Button
@@ -284,7 +296,7 @@ export default function AssetDetails({
                     className="bg-green-600 hover:bg-green-700 text-white"
                   >
                     <Link2 className="h-4 w-4 mr-2" />
-                    Assign Device
+                    Manage Connection
                   </Button>
                 ))}
             </div>
