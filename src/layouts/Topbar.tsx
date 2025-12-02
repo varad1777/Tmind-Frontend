@@ -104,7 +104,7 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 sm:px-6 bg-card backdrop-blur-md border-b border-border shadow-sm transition-colors">
+    <header className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 sm:px-6 bg-sidebar backdrop-blur-md border-b border-border shadow-sm transition-colors">
       
       <div className="flex items-center gap-3">
         <Button
@@ -124,7 +124,7 @@ export default function Topbar({ onToggleSidebar }: TopbarProps) {
 
       
       <div className="flex items-center gap-3">
-        {/* <ThemeToggle /> */}
+        <ThemeToggle />
 
         <DropdownMenu>
         <DropdownMenuTrigger asChild>

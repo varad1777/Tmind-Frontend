@@ -14,7 +14,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={() => setDark(!dark)}
-      className="p-2 rounded bg-card hover:bg-sidebar transition"
+      className="p-2 rounded hover:bg-sidebar transition"
       title="Toggle Theme"
     >
       {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}

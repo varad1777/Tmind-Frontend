@@ -119,7 +119,7 @@ export default function Dashboard() {
   const efficiency = 94.2;
 
   return (
-    <div className="w-full overflow-hidden p-4">
+    <div className="w-full overflow-hidden p-2 space-y-2">
       {/* Header */}
       <div className="mb-3 border-b pb-3">
         <div className="flex items-center justify-between">

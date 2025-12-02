@@ -118,7 +118,7 @@ export default function UserManagement() {
   );
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-2 space-y-2">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">User Management</h1>
