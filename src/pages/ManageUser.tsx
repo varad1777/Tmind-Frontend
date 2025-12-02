@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAuth } from "@/context/AuthContext";
+import DeleteUserDialog from "@/user/DeleteUserDialog";
 
 // Importing your User API
 import { getAllUsers, updateUser, deleteUser as apiDeleteUser } from "../api/userApi";
@@ -19,6 +20,8 @@ export default function UserManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const { user } = useAuth();
   const isAdmin = user?.role === "Admin";
@@ -46,7 +49,6 @@ export default function UserManagement() {
 const updateRole = async (user: User, newRole: string) => {
     try {
         const updatedPayload = {
-        userId: user.userId,
         username: user.username,
         email: user.email,
         role: newRole,
@@ -151,7 +153,8 @@ const updateRole = async (user: User, newRole: string) => {
                         className="border border-border rounded-md bg-background px-2 py-1"
                         >
                           <option>User</option>
-                          <option>Manager</option>
+                          <option>Engineer</option>
+                          <option>Operator</option>
                           <option>Admin</option>
                         </select>
                       ) : (
@@ -164,7 +167,10 @@ const updateRole = async (user: User, newRole: string) => {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleDeleteUser(u.userId)}
+                          onClick={() => {
+                          setSelectedUser(u);
+                          setShowDeleteDialog(true);
+                        }}
                           className="flex items-center gap-1"
                         >
                           <Trash2 className="h-4 w-4" /> Delete
@@ -183,6 +189,16 @@ const updateRole = async (user: User, newRole: string) => {
             </tbody>
           </table>
         </div>
+      )}
+      {showDeleteDialog && selectedUser && (
+      <DeleteUserDialog
+        open={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        user={selectedUser}
+        onDeleted={(id) =>
+          setUsers((prev) => prev.filter((u) => u.userId !== id))
+        }
+      />
       )}
     </div>
   );
