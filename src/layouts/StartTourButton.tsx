@@ -7,6 +7,8 @@ import { assetsTour } from "@/tour/assetTour";
 import { userManagementTour } from "@/tour/userManagementTour";
 import { deletedDevicesTour } from "@/tour/deletedDeviceTour";
 import { deletedAssetsTour } from "@/tour/deletedAssetTour";
+import { signalTour } from "@/tour/signalTour";
+import { reportTour } from "@/tour/reportTour";
 
 export default function StartTourButton() {
   const location = useLocation();
@@ -25,6 +27,10 @@ export default function StartTourButton() {
       startTour(deletedDevicesTour);
     }else if (location.pathname.startsWith("/deleted-assets")) {
       startTour(deletedAssetsTour);
+    }else if (location.pathname.startsWith("/signal")) {
+      startTour(signalTour);
+    }else if (location.pathname.startsWith("/reports")) {
+      startTour(reportTour);
     } else {
       alert("No tour available on this page yet!");
     }
