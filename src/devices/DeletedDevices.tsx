@@ -73,7 +73,7 @@ export default function DeletedDevices() {
   const isAdmin = user?.role === 'Admin';
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-2 space-y-2">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">Deleted Devices</h1>

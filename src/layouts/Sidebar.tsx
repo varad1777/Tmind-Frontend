@@ -3,7 +3,7 @@ import {
   Home,
   Network,
   Cpu,
-  Activity,
+  File,
   Trash,
   UserRoundSearch 
 } from "lucide-react";
@@ -18,6 +18,7 @@ export default function Sidebar() {
   const menuItems = [
     { icon: <Home size={18} />, label: "Dashboard", path: "/dashboard" },
     { icon: <Network size={18} />, label: "Assets", path: "/assets" },
+    { icon: <File size={18} />, label: "Reports", path: "/reports" },
     { icon: <Cpu size={18} />, label: "Devices", path: "/devices" },
 
     // ADMIN ONLY

@@ -8,7 +8,6 @@ import { getDeletedAssets, restoreAssetById } from "@/api/assetApi"; // You will
 interface Asset {
   id: string;
   name: string;
-  level: number;
   isDeleted: boolean;
 }
 
@@ -58,7 +57,7 @@ export default function DeletedAssets() {
   );
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-2 space-y-2">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">Deleted Assets</h1>
@@ -90,7 +89,6 @@ export default function DeletedAssets() {
             <thead className="bg-muted/40 text-left">
               <tr>
                 <th className="p-4 font-semibold">Asset Name</th>
-                <th className="p-4 font-semibold">Level</th>
                 {isAdmin && <th className="p-4 font-semibold text-center">Actions</th>}
               </tr>
             </thead>
@@ -99,7 +97,6 @@ export default function DeletedAssets() {
                 filteredAssets.map((a) => (
                   <tr key={a.id} className="border-t border-border hover:bg-muted/20 transition-colors">
                     <td className="p-4 font-medium">{a.name}</td>
-                    <td className="p-4">{a.level}</td>
                     {isAdmin && (
                       <td className="p-4 flex justify-center">
                         <Button
