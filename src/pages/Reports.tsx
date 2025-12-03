@@ -136,116 +136,150 @@ export default function DailySignalReport() {
     : reportData;
 
   return (
-    <div className="p-6 space-y-6 max-w-6xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Daily Signal Report</h2>
+  <div className="p-6 space-y-6 max-w-6xl mx-auto">
+    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Daily Signal Report</h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-6">
-        {/* Left Card: Selection */}
-        <div className="bg-white dark:bg-gray-800 border border-border rounded-lg p-4 shadow-md space-y-4" style={{ height: "630px" }}>
-          <h3 className="font-semibold text-gray-700 dark:text-gray-200">Select Parameters</h3>
+    <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-6">
+      {/* Left Card: Selection */}
+      <div
+        id="report-left-card"
+        className="bg-white dark:bg-gray-800 border border-border rounded-lg p-4 shadow-md space-y-4"
+        style={{ height: "630px" }}
+      >
+        <h3 className="font-semibold text-gray-700 dark:text-gray-200">Select Parameters</h3>
 
-          <div className="space-y-2">
-            <label className="text-sm text-gray-600 dark:text-gray-300">Date</label>
-            <Input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full border border-border rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            />
-          </div>
+        {/* Date */}
+        <div className="space-y-2">
+          <label className="text-sm text-gray-600 dark:text-gray-300">Date</label>
+          <Input
+            id="report-date"
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="w-full border border-border rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+          />
+        </div>
 
-          <div className="space-y-2">
-            <label className="text-sm text-gray-600 dark:text-gray-300">Asset</label>
-            {loadingAssets ? (
-              <div className="text-sm text-gray-500 dark:text-gray-400">Loading assets...</div>
-            ) : (
-              <select
-                className="w-full p-2 border border-border rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                value={selectedAssetId}
-                onChange={(e) => setSelectedAssetId(e.target.value)}
-              >
-                <option value="">Select Asset</option>
-                {allAssets.map((a) => (
-                  <option key={a.assetId} value={a.assetId}>
-                    {a.name} (Level {a.level})
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+        {/* Asset Dropdown */}
+        <div className="space-y-2">
+          <label className="text-sm text-gray-600 dark:text-gray-300">Asset</label>
+          {loadingAssets ? (
+            <div className="text-sm text-gray-500 dark:text-gray-400">Loading assets...</div>
+          ) : (
+            <select
+              id="report-asset"
+              className="w-full p-2 border border-border rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              value={selectedAssetId}
+              onChange={(e) => setSelectedAssetId(e.target.value)}
+            >
+              <option value="">Select Asset</option>
+              {allAssets.map((a) => (
+                <option key={a.assetId} value={a.assetId}>
+                  {a.name} (Level {a.level})
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
 
-          <div className="flex flex-col gap-1">
-            <div className="text-sm text-gray-600 dark:text-gray-300">Assigned Device</div>
-            <div className="font-medium text-gray-800 dark:text-gray-100">{deviceName}</div>
-          </div>
+        {/* Device Name */}
+        <div id="report-device" className="flex flex-col gap-1">
+          <div className="text-sm text-gray-600 dark:text-gray-300">Assigned Device</div>
+          <div className="font-medium text-gray-800 dark:text-gray-100">{deviceName}</div>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="alertsOnly"
-              checked={showOnlyAlerts}
-              onChange={(e) => setShowOnlyAlerts(e.target.checked)}
-              className="w-4 h-4 accent-primary"
-            />
-            <label htmlFor="alertsOnly" className="text-sm text-gray-700 dark:text-gray-200">Show Only Alerts</label>
-          </div>
+        {/* Alerts Only Checkbox */}
+        <div id="report-alerts" className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="alertsOnly"
+            checked={showOnlyAlerts}
+            onChange={(e) => setShowOnlyAlerts(e.target.checked)}
+            className="w-4 h-4 accent-primary"
+          />
+          <label htmlFor="alertsOnly" className="text-sm text-gray-700 dark:text-gray-200">
+            Show Only Alerts
+          </label>
+        </div>
 
-          <Button onClick={handleGenerateReport} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-            Generate Report
+        {/* Generate Report Button */}
+        <Button
+          id="generate-report-btn"
+          onClick={handleGenerateReport}
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          Generate Report
+        </Button>
+      </div>
+
+      {/* Right Card */}
+      <div
+        className="bg-white dark:bg-gray-800 border border-border rounded-lg shadow-md"
+        style={{ height: "630px", display: "flex", flexDirection: "column" }}
+      >
+        {/* Top controls */}
+        <div className="p-4 border-b border-border flex flex-wrap gap-3">
+          <Button
+            id="download-csv-btn"
+            onClick={() => downloadCSV(displayedReport)}
+            className="bg-primary/20 text-primary border border-primary hover:bg-primary/30"
+          >
+            Download CSV
+          </Button>
+
+          <Button
+            id="download-pdf-btn"
+            onClick={() => downloadPDF(displayedReport)}
+            className="bg-primary/20 text-primary border border-primary hover:bg-primary/30"
+          >
+            Download PDF
           </Button>
         </div>
 
-        {/* Right Card: Report */}
-        <div className="bg-white dark:bg-gray-800 border border-border rounded-lg shadow-md" style={{ height: "630px", display: "flex", flexDirection: "column" }}>
-          {/* Top controls */}
-          <div className="p-4 border-b border-border flex flex-wrap gap-3">
-            <Button
-              onClick={() => downloadCSV(displayedReport)}
-              className="bg-primary/20 text-primary border border-primary hover:bg-primary/30"
-            >
-              Download CSV
-            </Button>
-            <Button
-              onClick={() => downloadPDF(displayedReport)}
-              className="bg-primary/20 text-primary border border-primary hover:bg-primary/30"
-            >
-              Download PDF
-            </Button>
-          </div>
-
-          {/* Scrollable table */}
-          <div className="overflow-auto flex-1">
-            {displayedReport.length > 0 ? (
-              <table className="w-full text-gray-800 dark:text-gray-100 border-collapse">
-<thead className="bg-primary text-primary-foreground sticky top-0 z-10">
-
-                  <tr>
-                    {Object.keys(displayedReport[0]).map((key) => (
-                      <th key={key} className="p-3 border-b border-border text-left font-semibold">{key}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayedReport.map((row, i) => {
-                    const isAlert = parseFloat(row.value) > THRESHOLD;
-                    return (
-                      <tr key={i} className={`transition-colors ${isAlert ? "bg-red-100 dark:bg-red-700 font-semibold" : "hover:bg-primary/10 dark:hover:bg-primary/20"}`}>
-                        {Object.values(row).map((val, j) => (
-                          <td key={j} className="p-2 border-b border-border">{val}</td>
-                        ))}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            ) : (
-              <div className="text-gray-500 dark:text-gray-400 text-center py-8">
-                No report generated. Select date and asset, then click "Generate Report".
-              </div>
-            )}
-          </div>
+        {/* Scrollable table */}
+        <div id="report-table" className="overflow-auto flex-1">
+          {displayedReport.length > 0 ? (
+            <table className="w-full text-gray-800 dark:text-gray-100 border-collapse">
+              <thead className="bg-primary text-primary-foreground sticky top-0 z-10">
+                <tr>
+                  {Object.keys(displayedReport[0]).map((key) => (
+                    <th key={key} className="p-3 border-b border-border text-left font-semibold">
+                      {key}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {displayedReport.map((row, i) => {
+                  const isAlert = parseFloat(row.value) > THRESHOLD;
+                  return (
+                    <tr
+                      key={i}
+                      className={`transition-colors ${
+                        isAlert
+                          ? "bg-red-100 dark:bg-red-700 font-semibold"
+                          : "hover:bg-primary/10 dark:hover:bg-primary/20"
+                      }`}
+                    >
+                      {Object.values(row).map((val, j) => (
+                        <td key={j} className="p-2 border-b border-border">
+                          {val}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-gray-500 dark:text-gray-400 text-center py-8">
+              No report generated. Select date and asset, then click "Generate Report".
+            </div>
+          )}
         </div>
       </div>
     </div>
-  );
+  </div>
+);
+
 }
