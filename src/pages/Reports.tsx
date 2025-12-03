@@ -19,7 +19,7 @@ const generateReportData = (asset: Asset, deviceName: string, date: string) => {
         device: deviceName,
         asset: asset.name,
         signal: sig,
-        value: (Math.random() * 100).toFixed(2), // dummy value
+        value: (Math.random() * 100).toFixed(2),
         timestamp,
       });
     });
@@ -58,6 +58,7 @@ const downloadPDF = (data: any[], filename = "signal-report.pdf") => {
     theme: "grid",
     headStyles: { fillColor: [33, 150, 243], textColor: 255 },
     alternateRowStyles: { fillColor: [240, 240, 240] },
+    showHead: "everyPage", // sticky header for PDF
   });
   doc.save(filename);
 };
@@ -173,7 +174,7 @@ export default function DailySignalReport() {
             )}
           </div>
 
-          <div>
+          <div className="flex flex-col gap-1">
             <div className="text-sm text-gray-600 dark:text-gray-300">Assigned Device</div>
             <div className="font-medium text-gray-800 dark:text-gray-100">{deviceName}</div>
           </div>
@@ -195,53 +196,54 @@ export default function DailySignalReport() {
         </div>
 
         {/* Right Card: Report */}
-        <div className="bg-white dark:bg-gray-800 border border-border rounded-lg p-4 shadow-md" style={{ height: "630px", overflowY: "auto" }}>
-          {displayedReport.length > 0 ? (
-            <>
-              <div className="flex flex-wrap gap-3 mb-4">
-                <Button
-                  onClick={() => downloadCSV(displayedReport)}
-                  className="bg-primary/20 text-primary border border-primary hover:bg-primary/30"
-                >
-                  Download CSV
-                </Button>
-                <Button
-                  onClick={() => downloadPDF(displayedReport)}
-                  className="bg-primary/20 text-primary border border-primary hover:bg-primary/30"
-                >
-                  Download PDF
-                </Button>
-              </div>
+        <div className="bg-white dark:bg-gray-800 border border-border rounded-lg shadow-md" style={{ height: "630px", display: "flex", flexDirection: "column" }}>
+          {/* Top controls */}
+          <div className="p-4 border-b border-border flex flex-wrap gap-3">
+            <Button
+              onClick={() => downloadCSV(displayedReport)}
+              className="bg-primary/20 text-primary border border-primary hover:bg-primary/30"
+            >
+              Download CSV
+            </Button>
+            <Button
+              onClick={() => downloadPDF(displayedReport)}
+              className="bg-primary/20 text-primary border border-primary hover:bg-primary/30"
+            >
+              Download PDF
+            </Button>
+          </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-gray-800 dark:text-gray-100 border-collapse">
-                  <thead className="bg-primary/20 dark:bg-primary/30 text-primary-foreground dark:text-white">
-                    <tr>
-                      {Object.keys(displayedReport[0]).map((key) => (
-                        <th key={key} className="p-3 border-b border-border text-left font-semibold">{key}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayedReport.map((row, i) => {
-                      const isAlert = parseFloat(row.value) > THRESHOLD;
-                      return (
-                        <tr key={i} className={`transition-colors ${isAlert ? "bg-red-100 dark:bg-red-700 font-semibold" : "hover:bg-primary/10 dark:hover:bg-primary/20"}`}>
-                          {Object.values(row).map((val, j) => (
-                            <td key={j} className="p-2 border-b border-border">{val}</td>
-                          ))}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+          {/* Scrollable table */}
+          <div className="overflow-auto flex-1">
+            {displayedReport.length > 0 ? (
+              <table className="w-full text-gray-800 dark:text-gray-100 border-collapse">
+<thead className="bg-primary text-primary-foreground sticky top-0 z-10">
+
+                  <tr>
+                    {Object.keys(displayedReport[0]).map((key) => (
+                      <th key={key} className="p-3 border-b border-border text-left font-semibold">{key}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedReport.map((row, i) => {
+                    const isAlert = parseFloat(row.value) > THRESHOLD;
+                    return (
+                      <tr key={i} className={`transition-colors ${isAlert ? "bg-red-100 dark:bg-red-700 font-semibold" : "hover:bg-primary/10 dark:hover:bg-primary/20"}`}>
+                        {Object.values(row).map((val, j) => (
+                          <td key={j} className="p-2 border-b border-border">{val}</td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <div className="text-gray-500 dark:text-gray-400 text-center py-8">
+                No report generated. Select date and asset, then click "Generate Report".
               </div>
-            </>
-          ) : (
-            <div className="text-gray-500 dark:text-gray-400 text-center py-8">
-              No report generated. Select date and asset, then click "Generate Report".
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
